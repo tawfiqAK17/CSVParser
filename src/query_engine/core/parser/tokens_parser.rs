@@ -1,4 +1,4 @@
-use std::{fmt::format, iter::Product};
+use std::{fmt::format, iter::Product, panic::catch_unwind, thread::current};
 
 use crate::query_engine::core::tokens::Tokens;
 
@@ -170,7 +170,7 @@ impl tokens_parser {
         self.comparison()
     }
     fn comparison(&mut self) -> ParseResult {
-        match self.field_name() {
+        match self.comparable() {
             ParseResult::Ok => {}
             ParseResult::None => {
                 return ParseResult::None;
@@ -188,17 +188,27 @@ impl tokens_parser {
                 return ParseResult::Err(error);
             }
         }
-        match self.value() {
+        match self.comparable() {
             ParseResult::Ok => {
                 return ParseResult::Ok;
             }
             ParseResult::None => {
-                return ParseResult::Err("missing a value for the comparison".to_string());
+                return ParseResult::Err("missing the right hand side comparable".to_string());
             }
             ParseResult::Err(error) => {
                 return ParseResult::Err(error);
             }
         }
+    }
+    fn comparable(&mut self) -> ParseResult {
+      match self.value() {
+        ParseResult::Ok => {
+          return ParseResult::Ok;
+        },
+        ParseResult::None => {},
+        ParseResult::Err(error) => {},
+      }
+      return self.field_name();
     }
     fn logical_op(&mut self) -> ParseResult {
         if self.consume_literal("and") {
@@ -275,12 +285,12 @@ impl tokens_parser {
         if self.end_of_query() {
             return ParseResult::None;
         }
-        self.tokens.push(Tokens::Literal(format(format_args!(
-            "{}",
-            self.query[self.index]
-        ))));
-        self.index += 1;
-        ParseResult::Ok
+        let current: &str = &self.query[self.index];
+        if current.starts_with("\"") && current.ends_with("\"") {
+          self.tokens.push(Tokens::Literal(current.to_string().replace("\"", "")));
+          return ParseResult::Ok;
+        }
+        ParseResult::None
     }
     fn number(&mut self) -> ParseResult {
         if self.end_of_query() {
