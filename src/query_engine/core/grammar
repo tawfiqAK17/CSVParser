@@ -1,0 +1,30 @@
+grammar:
+
+Query          = GetQuery | SetQuery 
+GetQuery       = "get" Selector WhereClause? FunctionCall?
+FunctionCall   = Function Function*
+Function       = Sort | ReverseSort | Head | Tail
+Sort           = "sort" FieldName
+ReverseSort    = "rsort" FieldName
+Head           = "head" Number
+Tail           = "tail" Number
+SetQuery       = "set" Selector WhereClause? "to" Assignable
+Selector       = "*" | FieldName
+Assignable     = GetQuery | Value | Modification
+Modification   = Value Modifier Value 
+WhereClause    = "where" Condition
+Condition      = OrCondition
+OrCondition    = AndCondition ("or" AndCondition)*
+AndCondition   = NotCondition ("and" NotCondition)*
+NotCondition   = "not"? PrimaryCondition
+PrimaryCondition = Comparison | "(" Condition ")"
+Comparison     = Value ComparisonOp Value
+Value          = PrimitiveValue | FieldName
+ComparisonOp   = "==" | "!=" | ">" | "<" | ">=" | "<=" | "contains" | "in" | "starts-with" | "ends-with" | "matches" | "like" | "between"
+PrimitiveValue = Literal | Number | Boolean | List
+Modifier       = "+" | "-" | "*" | "/"
+Literal        = '"' [^"]* '"' | "'" [^']* "'"
+Number         = Float
+Boolean        = "true" | "false"
+List           = "[" PrimitiveValue ("," PrimitiveValue)* "]" | GetQuery
+FieldName      = String

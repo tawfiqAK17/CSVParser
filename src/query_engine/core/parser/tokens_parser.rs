@@ -1,11 +1,10 @@
-use std::{fmt::format, iter::Product, panic::catch_unwind, thread::current};
+use std::fmt::format;
 
 use crate::query_engine::core::tokens::Tokens;
 
-use super::tokens;
 
 #[derive(Debug)]
-pub struct tokens_parser {
+pub struct TokensParser {
     query: Vec<String>,
     index: usize,
     tokens: Vec<Tokens>,
@@ -17,9 +16,9 @@ enum ParseResult {
     Err(String), // the item exist but there is a syntax error
 }
 
-impl tokens_parser {
-    pub fn new(query: String) -> tokens_parser {
-        tokens_parser {
+impl TokensParser {
+    pub fn new(query: String) -> TokensParser {
+        TokensParser {
             query: query.split(' ').map(|item| item.to_string()).collect(),
             index: 0,
             tokens: Vec::new(),
@@ -75,7 +74,7 @@ impl tokens_parser {
         match self.where_clause() {
             ParseResult::Ok => {}
             ParseResult::None => {
-                if (!self.end_of_query()) {
+                if !self.end_of_query() {
                     return ParseResult::Err("a where clause expected".to_string());
                 }
                 return ParseResult::Ok;
@@ -112,6 +111,7 @@ impl tokens_parser {
         }
         self.field_list()
     }
+
     fn field_list(&mut self) -> ParseResult {
         match self.field_name() {
             ParseResult::Ok => {}
@@ -127,6 +127,7 @@ impl tokens_parser {
         }
         ParseResult::Ok
     }
+
     fn where_clause(&mut self) -> ParseResult {
         if !self.consume_literal("where") {
             return ParseResult::None;
@@ -135,9 +136,7 @@ impl tokens_parser {
         match self.condition() {
             ParseResult::Ok => {}
             ParseResult::None => {
-                return ParseResult::Err(
-                    "a condition for the where clause is expected".to_string(),
-                );
+                return ParseResult::Err("missing a condition for the where clause".to_string());
             }
             ParseResult::Err(error) => {
                 return ParseResult::Err(error);
@@ -145,6 +144,7 @@ impl tokens_parser {
         }
         ParseResult::Ok
     }
+
     fn condition(&mut self) -> ParseResult {
         match self.expression() {
             ParseResult::Ok => {}
@@ -166,9 +166,11 @@ impl tokens_parser {
         }
         return self.condition();
     }
+
     fn expression(&mut self) -> ParseResult {
         self.comparison()
     }
+
     fn comparison(&mut self) -> ParseResult {
         match self.comparable() {
             ParseResult::Ok => {}
@@ -200,16 +202,20 @@ impl tokens_parser {
             }
         }
     }
+
     fn comparable(&mut self) -> ParseResult {
-      match self.value() {
-        ParseResult::Ok => {
-          return ParseResult::Ok;
-        },
-        ParseResult::None => {},
-        ParseResult::Err(error) => {},
-      }
-      return self.field_name();
+        match self.value() {
+            ParseResult::Ok => {
+                return ParseResult::Ok;
+            }
+            ParseResult::None => {}
+            ParseResult::Err(error) => {
+              return ParseResult::Err(error);
+            }
+        }
+        return self.field_name();
     }
+
     fn logical_op(&mut self) -> ParseResult {
         if self.consume_literal("and") {
             self.tokens.push(Tokens::LogicalOp("and".to_string()));
@@ -227,6 +233,7 @@ impl tokens_parser {
             self.query[self.index]
         )))
     }
+
     fn comparison_op(&mut self) -> ParseResult {
         let operators = vec![
             "==",
@@ -257,6 +264,7 @@ impl tokens_parser {
             self.query[self.index]
         )))
     }
+
     fn value(&mut self) -> ParseResult {
         match self.number() {
             ParseResult::Ok => {
@@ -281,17 +289,20 @@ impl tokens_parser {
         }
         ParseResult::None
     }
+
     fn literal(&mut self) -> ParseResult {
         if self.end_of_query() {
             return ParseResult::None;
         }
         let current: &str = &self.query[self.index];
         if current.starts_with("\"") && current.ends_with("\"") {
-          self.tokens.push(Tokens::Literal(current.to_string().replace("\"", "")));
-          return ParseResult::Ok;
+            self.tokens
+                .push(Tokens::Literal(current.to_string().replace("\"", "")));
+            return ParseResult::Ok;
         }
         ParseResult::None
     }
+
     fn number(&mut self) -> ParseResult {
         if self.end_of_query() {
             return ParseResult::None;
@@ -302,11 +313,12 @@ impl tokens_parser {
                 self.index += 1;
             }
             Err(_) => {
-              return ParseResult::None;
+                return ParseResult::None;
             }
         }
         ParseResult::Ok
     }
+
     fn boolean(&mut self) -> ParseResult {
         if self.end_of_query() {
             return ParseResult::None;
@@ -321,9 +333,7 @@ impl tokens_parser {
         }
         ParseResult::None
     }
-    fn list(&mut self) -> ParseResult {
-        ParseResult::Ok
-    }
+
     fn field_name(&mut self) -> ParseResult {
         if self.end_of_query() {
             return ParseResult::None;

@@ -1,17 +1,7 @@
-use super::tokens;
 mod tokens_parser;
+use crate::query_engine::core::tokens::Tokens;
 
-pub fn parse(query: String) {
-    let mut parser = tokens_parser::tokens_parser::new(query);
-    let tokens = parser.parse();
-    match tokens {
-        Ok(vals) => {
-          print!("[");
-            for token in vals {
-                print!("{token:?}, ");
-            }
-          print!("]");
-        }
-        Err(error) => println!("{error}"),
-    }
+pub fn parse(query: String) -> Result<Vec<Tokens>, String> {
+    let mut parser = tokens_parser::TokensParser::new(query);
+    parser.parse()
 }

@@ -22,17 +22,19 @@ fn main() {
         Ok(val) => {
             fields = val.0;
             columns = val.1;
-          },
+        }
         Err(error) => eprintln!("{error}"),
     }
 
     // main loop
-    // loop {
-      let mut command = String::new();
-      println!("command: ");
-      stdin().read_line(&mut command).expect("failed to read the command");
-      
-      query_engine::query(command.trim_end().to_string(), fields, columns);
-      
-    // }
+    loop {
+        let mut command = String::new();
+        println!("command: ");
+        stdin()
+            .read_line(&mut command)
+            .expect("failed to read the command");
+
+        query_engine::query(command.trim_end().to_string(), &fields, &columns);
+        println!();
+    }
 }
