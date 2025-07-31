@@ -1,10 +1,10 @@
 use std::{
-    collections::HashMap,
     fs::File,
     io::{BufRead, BufReader},
 };
+use indexmap::IndexMap;
 
-pub fn parse_file(path: &str) -> Result<(Vec<String>, HashMap<String, Vec<String>>), Box<dyn std::error::Error>> {
+pub fn parse_file(path: &str) -> Result<IndexMap<String, Vec<String>>, Box<dyn std::error::Error>> {
     let file = File::open(path)?;
 
     let reader = BufReader::new(file);
@@ -15,7 +15,7 @@ pub fn parse_file(path: &str) -> Result<(Vec<String>, HashMap<String, Vec<String
     let mut fields: Vec<String> = Vec::new();
 
     // the map would have the header name as the key and the column values as value;
-    let mut columns: HashMap<String, Vec<String>> = HashMap::new();
+    let mut columns: IndexMap<String, Vec<String>> = IndexMap::new();
 
     for line in reader.lines() {
         let mut line_content = String::new();
@@ -42,4 +42,5 @@ pub fn parse_file(path: &str) -> Result<(Vec<String>, HashMap<String, Vec<String
         }
     }
 
-    Ok((fields, columns)) }
+    Ok(columns)
+}

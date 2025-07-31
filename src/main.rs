@@ -1,4 +1,5 @@
-use std::{collections::HashMap, env, io::stdin, process::exit};
+use std::{env, io::stdin, process::exit};
+use indexmap::IndexMap;
 mod csv_parser;
 mod query_engine;
 
@@ -16,12 +17,10 @@ fn main() {
             exit(2);
         }
     }
-    let mut fields: Vec<String> = Vec::new();
-    let mut columns: HashMap<String, Vec<String>> = HashMap::new();
+    let mut columns: IndexMap<String, Vec<String>> = IndexMap::new();
     match csv_parser::parse_file("/home/tawfiq/test.csv") {
         Ok(val) => {
-            fields = val.0;
-            columns = val.1;
+            columns = val;
         }
         Err(error) => eprintln!("{error}"),
     }
@@ -34,7 +33,7 @@ fn main() {
             .read_line(&mut command)
             .expect("failed to read the command");
 
-        query_engine::query(command.trim_end().to_string(), &fields, &columns);
+        query_engine::query(command.trim_end().to_string(), &columns);
         println!();
     }
 }
