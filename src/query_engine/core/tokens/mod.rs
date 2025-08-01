@@ -4,6 +4,9 @@ pub mod set_query;
 pub mod where_clause;
 pub mod function_call;
 pub mod function;
-
-
-
+pub mod condition;
+pub mod or_condition;
+pub mod and_condition;
+pub mod not_condition;
+pub mod primary_condition;
+pub mod comparison;

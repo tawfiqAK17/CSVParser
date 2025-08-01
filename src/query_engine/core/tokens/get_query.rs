@@ -24,7 +24,7 @@ impl GetQuery {
                 }
             }
           if let Some(where_clause) = &self.where_clause {
-                if where_clause.evaluate(&row) {
+                if where_clause.evaluate(columns.keys().collect(), &row) {
                     if let Some(_) = &self.function_call {
                         valid_rows.push(row.clone());
                     } else {

@@ -20,9 +20,12 @@ OrCondition       = AndCondition ("or" AndCondition)*
 AndCondition      = NotCondition ("and" NotCondition)*
 NotCondition      = "not"? PrimaryCondition
 PrimaryCondition  = Comparison | "(" Condition ")"
-Comparison        = Value ComparisonOp Value
+Comparison        = FieldName ComparisonOp Value
 Value             = PrimitiveValue | FieldName
-ComparisonOp      = "==" | "!=" | ">" | "<" | ">=" | "<=" | "contains" | "in" | "starts-with" | "ends-with" | "matches" | "like" | "between"
+ComparisonOp      = NumericalOp | StringOp
+NumericalOp       = "==" | "!=" | ">" | "<" | ">=" | "<=" | BetweenOp
+BetweenOp         = "between" (Number | FieldName) "," (Number | FieldName)
+StringOp          = "is" | "contains" | "starts-with" | "ends-with"
 PrimitiveValue    = Literal | Number | Boolean | List
 Modifier          = "+" | "-" | "*" | "/"
 Literal           = '"' [^"]* '"' | "'" [^']* "'"
