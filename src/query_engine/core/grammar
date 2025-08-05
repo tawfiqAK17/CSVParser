@@ -24,7 +24,7 @@ Comparison        = FieldName ComparisonOp Value
 Value             = PrimitiveValue | FieldName
 ComparisonOp      = NumericalOp | StringOp
 NumericalOp       = "==" | "!=" | ">" | "<" | ">=" | "<=" | BetweenOp
-BetweenOp         = "between" (Number | FieldName) "," (Number | FieldName)
+BetweenOp         = "between" (Number | FieldName) "and" (Number | FieldName)
 StringOp          = "is" | "contains" | "starts-with" | "ends-with"
 PrimitiveValue    = Literal | Number | Boolean | List
 Modifier          = "+" | "-" | "*" | "/"

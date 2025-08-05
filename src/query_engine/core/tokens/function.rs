@@ -134,8 +134,6 @@ impl Function {
 
 #[cfg(test)]
 mod tests {
-    use std::net::ToSocketAddrs;
-
     fn get_data() -> (Vec<String>, Vec<Vec<String>>) {
         let fields = vec!["name".to_string(), "age".to_string(), "points".to_string()];
         let rows = vec![

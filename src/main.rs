@@ -2,6 +2,7 @@ use std::{env, io::stdin, process::exit};
 use indexmap::IndexMap;
 mod csv_parser;
 mod query_engine;
+mod logger;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
