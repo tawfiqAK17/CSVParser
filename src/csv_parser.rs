@@ -1,8 +1,8 @@
+use indexmap::IndexMap;
 use std::{
     fs::File,
     io::{BufRead, BufReader},
 };
-use indexmap::IndexMap;
 
 pub fn parse_file(path: &str) -> Result<IndexMap<String, Vec<String>>, Box<dyn std::error::Error>> {
     let file = File::open(path)?;

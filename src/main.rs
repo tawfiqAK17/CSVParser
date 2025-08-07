@@ -1,8 +1,8 @@
-use std::{env, io::stdin, process::exit};
 use indexmap::IndexMap;
+use std::{env, io::stdin, process::exit};
 mod csv_parser;
-mod query_engine;
 mod logger;
+mod query_engine;
 
 fn main() {
     let args: Vec<String> = env::args().collect();

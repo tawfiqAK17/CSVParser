@@ -1,4 +1,7 @@
+use crate::query_engine::core::tokens::value::parse_field_name;
+
 use super::function_call::FunctionCall;
+use super::value;
 use super::where_clause::WhereClause;
 use indexmap::IndexMap;
 
@@ -9,6 +12,64 @@ pub struct GetQuery {
 }
 
 impl GetQuery {
+    pub fn parse(lexemes: &[&String]) -> Option<Self> {
+        let mut selector: Vec<String> = Vec::new();
+        if lexemes[0] != "get" {
+            return None;
+        }
+        match lexemes.get(1) {
+            Some(lexeme) => {
+                if *lexeme == "*" {
+                    selector.push("*".to_string());
+                    let (where_clause, last_idx): (Option<WhereClause>, usize) =
+                        WhereClause::parse(lexemes, 2);
+                    let function_call = FunctionCall::parse(lexemes, last_idx);
+                    return Some(GetQuery {
+                        selector,
+                        where_clause,
+                        function_call,
+                    });
+                }
+                // the case where the selector is a field name or a list of theme
+                if let Some((mut fields_names, idx)) = Self::parse_field_name_list(lexemes, 1) {
+                    selector.append(&mut fields_names);
+                    let (where_clause, last_idx) = WhereClause::parse(lexemes, idx);
+                    let function_call = FunctionCall::parse(lexemes, last_idx);
+                    return Some(GetQuery {
+                        selector,
+                        where_clause,
+                        function_call,
+                    });
+                } else {
+                    eprintln!("a selector was expected for the get command");
+                    return None;
+                }
+            }
+            None => {
+                eprintln!("missing a selector after the get command");
+                return None;
+            }
+        }
+    }
+    // a helper method that parse the list of fields names
+    fn parse_field_name_list(
+        lexemes: &[&String],
+        mut start_idx: usize,
+    ) -> Option<(Vec<String>, usize)> {
+        let mut fields_names: Vec<String> = Vec::new();
+        while let Some(lexeme) = lexemes.get(start_idx) {
+            if let Some(field_name) = value::parse_field_name(lexeme) {
+                fields_names.push(field_name);
+                start_idx += 1;
+            } else {
+                if fields_names.is_empty() {
+                    return None;
+                }
+                return Some((fields_names, start_idx));
+            }
+        }
+        None
+    }
     pub fn evaluate(&self, columns: &IndexMap<String, Vec<String>>) -> () {
         let mut row: Vec<&String> = Vec::new();
         let mut idx = 0;
@@ -23,8 +84,8 @@ impl GetQuery {
                     row.push(&column[idx]);
                 }
             }
-          if let Some(where_clause) = &self.where_clause {
-                if where_clause.evaluate(columns.keys().collect(), &row) {
+            if let Some(where_clause) = &self.where_clause {
+                if where_clause.evaluate(&columns.keys().collect(), &row) {
                     if let Some(_) = &self.function_call {
                         valid_rows.push(row.clone());
                     } else {
@@ -51,10 +112,9 @@ impl GetQuery {
         }
         println!();
     }
-
     fn print_rows(&self, rows: Vec<Vec<&String>>) {
-      for row in rows {
-        self.print_row(&row);
-      }
+        for row in rows {
+            self.print_row(&row);
+        }
     }
 }

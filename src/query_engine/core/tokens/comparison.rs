@@ -1,12 +1,5 @@
+use super::value::Value;
 use std::cmp::Ordering;
-pub enum Value {
-    Literal(String),
-    FieldName(String),
-    Number(f32),
-    Boolean(bool),
-    List(List),
-    None,
-}
 pub enum ComparisonOps {
     Equal,
     NotEqual,
@@ -22,8 +15,6 @@ pub enum ComparisonOps {
     StartsWith,
     EndsWith,
 }
-
-struct List {}
 
 pub struct Comparison {
     field_name: String,
