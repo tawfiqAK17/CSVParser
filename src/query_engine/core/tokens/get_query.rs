@@ -14,8 +14,10 @@ pub struct GetQuery {
 impl GetQuery {
     pub fn parse(lexemes: &[&String]) -> Option<Self> {
         let mut selector: Vec<String> = Vec::new();
-        if lexemes[0] != "get" {
-            return None;
+        if let Some(lexeme) = lexemes.get(0) {
+            if *lexeme != "get" {
+                return None;
+            }
         }
         match lexemes.get(1) {
             Some(lexeme) => {
@@ -41,7 +43,8 @@ impl GetQuery {
                         function_call,
                     });
                 } else {
-                    eprintln!("a selector was expected for the get command");
+                    eprintln!("{:?}", selector);
+                    eprintln!("1 a selector was expected for the get command");
                     return None;
                 }
             }
@@ -59,7 +62,7 @@ impl GetQuery {
         let mut fields_names: Vec<String> = Vec::new();
         while let Some(lexeme) = lexemes.get(start_idx) {
             if let Some(field_name) = value::parse_field_name(lexeme) {
-                fields_names.push(field_name);
+                fields_names.push(field_name.clone());
                 start_idx += 1;
             } else {
                 if fields_names.is_empty() {
@@ -68,7 +71,10 @@ impl GetQuery {
                 return Some((fields_names, start_idx));
             }
         }
-        None
+        if fields_names.is_empty() {
+            return None;
+        }
+        return Some((fields_names, start_idx));
     }
     pub fn evaluate(&self, columns: &IndexMap<String, Vec<String>>) -> () {
         let mut row: Vec<&String> = Vec::new();

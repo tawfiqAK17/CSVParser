@@ -9,10 +9,10 @@ pub enum Value {
 
 struct List {}
 
-pub fn parse_literal(lexeme: &String) -> Option<Value> {
+pub fn parse_literal(lexeme: &String) -> Option<String> {
     if lexeme.starts_with("\"") {
         if lexeme.ends_with("\"") {
-            return Some(Value::Literal(lexeme.clone()));
+            return Some(lexeme[1..lexeme.len() - 1].to_string());
         }
     }
     None

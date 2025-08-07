@@ -1,3 +1,5 @@
+use crate::query_engine::core::tokens::value;
+
 use super::value::Value;
 use std::cmp::Ordering;
 pub enum ComparisonOps {
@@ -23,6 +25,70 @@ pub struct Comparison {
 }
 
 impl Comparison {
+    pub fn parse(lexemes: &[&String], mut idx: usize) -> (Option<Self>, usize) {
+        if let Some(lexeme) = lexemes.get(idx) {
+            if let Some(field_name) = value::parse_field_name(lexeme) {
+                idx += 1;
+
+                if let Some(lexeme) = lexemes.get(idx) {
+                    let mut comparison_op: ComparisonOps;
+                    let mut rhs: Value;
+                    match &lexeme[..] {
+                        "==" => comparison_op = ComparisonOps::Equal,
+                        ">=" => comparison_op = ComparisonOps::GreaterThanOrEqual,
+                        "<=" => comparison_op = ComparisonOps::LessThanOrEqual,
+                        ">" => comparison_op = ComparisonOps::GreaterThan,
+                        "<" => comparison_op = ComparisonOps::LessThan,
+                        // "between" => {},
+                        "is" => comparison_op = ComparisonOps::Is,
+                        "isnot" => comparison_op = ComparisonOps::IsNot,
+                        "contains" => comparison_op = ComparisonOps::Contains,
+                        "starts-with" => comparison_op = ComparisonOps::StartsWith,
+                        "ends-with" => comparison_op = ComparisonOps::EndsWith,
+                        _ => {
+                            eprintln!("expecting a comparison operator after the field name");
+                            return (None, idx);
+                        }
+                    }
+                    idx += 1;
+                    if let Some(lexeme) = lexemes.get(idx) {
+                        if let Some(literal) = value::parse_literal(lexeme) {
+                            rhs = Value::Literal(literal);
+                        } else if let Some(field_name) = value::parse_field_name(lexeme) {
+                            rhs = Value::FieldName(field_name);
+                        } else if let Some(number) = value::parse_number(lexeme) {
+                            rhs = Value::Number(number);
+                        } else {
+                            eprintln!(
+                                "{} can not be considered as a valid value to compare to",
+                                lexeme
+                            );
+                            return (None, idx);
+                        }
+                        return (
+                            Some(Comparison {
+                                field_name,
+                                comparison_op,
+                                rhs,
+                            }),
+                            idx,
+                        );
+                    } else {
+                    }
+                    eprintln!("expecting a value after the comparison operator");
+                    return (None, idx);
+                } else {
+                    eprintln!("expecting a comparison operator after the field name");
+                    return (None, idx);
+                }
+            } else {
+                eprintln!("expecting a field name for the comparison");
+                return (None, idx);
+            }
+        } else {
+            return (None, idx);
+        }
+    }
     pub fn evaluate(&self, fields: &Vec<&String>, row: &Vec<&String>) -> bool {
         match &self.comparison_op {
             ComparisonOps::Equal => match &&self.rhs {

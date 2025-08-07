@@ -6,7 +6,7 @@ pub struct PrimaryCondition {
 }
 
 impl PrimaryCondition {
-    pub fn parse(lexemes: &[&String], idx: usize) -> (Option<Self>, usize) {
+    pub fn parse(lexemes: &[&String], mut idx: usize) -> (Option<Self>, usize) {
         match lexemes.get(idx) {
             Some(lexeme) => {
                 if *lexeme == "(" {

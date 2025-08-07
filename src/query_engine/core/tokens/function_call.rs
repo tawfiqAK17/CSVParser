@@ -5,7 +5,9 @@ pub struct FunctionCall {
 }
 
 impl FunctionCall {
-    pub fn parse(lexemes: &[&String], idx: usize) -> Option<Self> {}
+    pub fn parse(lexemes: &[&String], idx: usize) -> Option<Self> {
+       None
+    }
     pub fn evaluate(&self, fields: &Vec<&String>, mut valid_rows: &mut Vec<Vec<&String>>) -> () {
         if let Some(function) = &self.function {
             function.run(&fields, &mut valid_rows);
