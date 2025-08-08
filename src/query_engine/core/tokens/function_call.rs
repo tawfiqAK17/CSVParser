@@ -1,4 +1,5 @@
 use super::function::Function;
+#[derive(Debug)]
 pub struct FunctionCall {
     function: Option<Function>,
     function_call: Option<Box<FunctionCall>>,
@@ -6,7 +7,23 @@ pub struct FunctionCall {
 
 impl FunctionCall {
     pub fn parse(lexemes: &[&String], idx: usize) -> Option<Self> {
-       None
+        match lexemes.get(idx) {
+            Some(_) => {}
+            None => return None,
+        }
+        let (function_option, last_idx) = Function::parse(lexemes, idx);
+        match function_option {
+            Some(function) => {
+              println!("{last_idx}");
+                match Self::parse(lexemes, last_idx) {
+                    Some(function_call) => {
+                      return Some(FunctionCall{function: Some(function), function_call: Some(Box::new(function_call))});
+                    },
+                    None => return Some(FunctionCall{function: Some(function), function_call: None}),
+                }
+            }
+            None => return None,
+        }
     }
     pub fn evaluate(&self, fields: &Vec<&String>, mut valid_rows: &mut Vec<Vec<&String>>) -> () {
         if let Some(function) = &self.function {

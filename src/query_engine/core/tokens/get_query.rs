@@ -5,6 +5,7 @@ use super::value;
 use super::where_clause::WhereClause;
 use indexmap::IndexMap;
 
+#[derive(Debug)]
 pub struct GetQuery {
     selector: Vec<String>,
     where_clause: Option<WhereClause>,
@@ -36,7 +37,7 @@ impl GetQuery {
                 if let Some((mut fields_names, idx)) = Self::parse_field_name_list(lexemes, 1) {
                     selector.append(&mut fields_names);
                     let (where_clause, last_idx) = WhereClause::parse(lexemes, idx);
-                    let function_call = FunctionCall::parse(lexemes, last_idx);
+                    let function_call = FunctionCall::parse(lexemes, last_idx + 1);
                     return Some(GetQuery {
                         selector,
                         where_clause,
@@ -97,6 +98,8 @@ impl GetQuery {
                     } else {
                         self.print_row(&row);
                     }
+                } else {
+                  continue;
                 }
             } else {
                 if let Some(_) = &self.function_call {

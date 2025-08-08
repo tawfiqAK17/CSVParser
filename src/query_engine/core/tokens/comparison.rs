@@ -2,6 +2,8 @@ use crate::query_engine::core::tokens::value;
 
 use super::value::Value;
 use std::cmp::Ordering;
+
+#[derive(Debug)]
 pub enum ComparisonOps {
     Equal,
     NotEqual,
@@ -18,6 +20,7 @@ pub enum ComparisonOps {
     EndsWith,
 }
 
+#[derive(Debug)]
 pub struct Comparison {
     field_name: String,
     comparison_op: ComparisonOps,

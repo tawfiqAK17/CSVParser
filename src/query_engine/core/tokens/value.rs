@@ -1,3 +1,4 @@
+#[derive(Debug)]
 pub enum Value {
     Literal(String),
     FieldName(String),
@@ -7,6 +8,7 @@ pub enum Value {
     None,
 }
 
+#[derive(Debug)]
 struct List {}
 
 pub fn parse_literal(lexeme: &String) -> Option<String> {

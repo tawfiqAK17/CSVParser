@@ -3,6 +3,7 @@ use indexmap::IndexMap;
 use super::get_query::GetQuery;
 use super::set_query::SetQuery;
 
+#[derive(Debug)]
 pub struct Query {
     get_query: Option<GetQuery>,
     set_query: Option<SetQuery>,

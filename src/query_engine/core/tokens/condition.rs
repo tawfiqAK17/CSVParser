@@ -1,4 +1,5 @@
 use super::or_condition::OrCondition;
+#[derive(Debug)]
 pub struct Condition {
     or_condition: OrCondition,
 }

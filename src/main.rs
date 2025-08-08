@@ -34,7 +34,7 @@ fn main() {
             .read_line(&mut command)
             .expect("failed to read the command");
 
-        query_engine::query(command.trim_end().to_string(), &columns);
+        query_engine::query(command.trim_end().to_string(), &mut columns);
         println!();
     }
 }

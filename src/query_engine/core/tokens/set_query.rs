@@ -1,4 +1,5 @@
 use indexmap::IndexMap;
+#[derive(Debug)]
 pub struct SetQuery {}
 
 impl SetQuery {

@@ -1,4 +1,6 @@
 use super::primary_condition::PrimaryCondition;
+
+#[derive(Debug)]
 pub struct NotCondition {
     not: Option<()>,
     primary_condition: PrimaryCondition,

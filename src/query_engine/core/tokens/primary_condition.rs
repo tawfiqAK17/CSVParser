@@ -1,5 +1,7 @@
 use super::comparison::Comparison;
 use super::condition::Condition;
+
+#[derive(Debug)]
 pub struct PrimaryCondition {
     comparison: Option<Comparison>,
     condition: Option<Box<Condition>>,

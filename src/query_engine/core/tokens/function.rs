@@ -1,20 +1,121 @@
+use super::value;
 use core::f32;
 use std::{cmp::Ordering, process::exit};
 
+#[derive(Debug)]
 pub enum Functions {
     Sort(String),
     ReverseSort(String),
     NSort(String),
-    NReverseSort(String),
+    ReverseNSort(String),
     Head(usize),
     Tail(usize),
 }
 
+#[derive(Debug)]
 pub struct Function {
     function_name: Functions,
 }
 
 impl Function {
+    pub fn parse(lexemes: &[&String], mut idx: usize) -> (Option<Self>, usize) {
+        match lexemes.get(idx) {
+            Some(lexeme) => {
+                idx += 1;
+                match lexemes.get(idx) {
+                    Some(param) => match value::parse_field_name(param) {
+                        Some(feild_name) => match lexeme.as_str() {
+                            "sort" => {
+                                return (
+                                    Some(Function {
+                                        function_name: Functions::Sort(param.to_string()),
+                                    }),
+                                    idx + 1,
+                                );
+                            }
+                            "reverse-sort" => {
+                                return (
+                                    Some(Function {
+                                        function_name: Functions::ReverseSort(param.to_string()),
+                                    }),
+                                    idx + 1,
+                                );
+                            }
+                            "nsort" => {
+                                return (
+                                    Some(Function {
+                                        function_name: Functions::NSort(param.to_string()),
+                                    }),
+                                    idx + 1,
+                                );
+                            }
+                            "reverse-nsort" => {
+                                return (
+                                    Some(Function {
+                                        function_name: Functions::ReverseNSort(param.to_string()),
+                                    }),
+                                    idx + 1,
+                                );
+                            }
+                            "head" | "tail" => {
+                                eprintln!(
+                                    "the function {} expect a parameter of type number",
+                                    lexeme
+                                );
+                                return (None, idx);
+                            }
+                            _ => {
+                                eprintln!("there is no function named {}", lexeme);
+                                return (None, idx);
+                            }
+                        },
+                        None => match value::parse_number(param) {
+                            Some(val) => match lexeme.as_str() {
+                                "head" => {
+                                    return (
+                                        Some(Function {
+                                            function_name: Functions::Head(val.round() as usize),
+                                        }),
+                                        idx + 1,
+                                    );
+                                }
+                                "tail" => {
+                                    return (
+                                        Some(Function {
+                                            function_name: Functions::Tail(val.round() as usize),
+                                        }),
+                                        idx + 1,
+                                    );
+                                }
+                                "sort" | "rsort" | "nsort" | "reverse-nsort" => {
+                                    eprintln!(
+                                        "the function {} expect a parameter of type field name",
+                                        lexeme
+                                    );
+                                    return (None, idx);
+                                }
+                                _ => {
+                                    eprintln!("there is no function named {}", lexeme);
+                                    return (None, idx);
+                                }
+                            },
+                            None => {
+                                eprintln!(
+                                    "the parameters of function can only be a field name or a number"
+                                );
+                                return (None, idx);
+                            }
+                        },
+                    },
+                    None => {
+                        eprintln!("expecting a parameter for the function {}", lexeme);
+                        return (None, idx);
+                    }
+                }
+            }
+            None => return (None, idx),
+        }
+    }
     pub fn run(&self, fields: &Vec<&String>, mut rows: &mut Vec<Vec<&String>>) {
         match &self.function_name {
             Functions::Sort(field_name) => {
@@ -50,7 +151,7 @@ impl Function {
                 }
             }
 
-            Functions::NReverseSort(field_name) => {
+            Functions::ReverseNSort(field_name) => {
                 match fields.iter().position(|&name| *name == *field_name) {
                     Some(idx) => {
                         self.n_reverse_sort(idx, rows);
@@ -205,7 +306,7 @@ mod tests {
         let fields_ref: Vec<&String> = fields.iter().collect();
         let mut rows_ref: Vec<Vec<&String>> = rows.iter().map(|row| row.iter().collect()).collect();
         let function = Function {
-            function_name: Functions::NReverseSort("points".to_string()),
+            function_name: Functions::ReverseNSort("points".to_string()),
         };
         function.run(&fields_ref, &mut rows_ref);
         let expected_rows = vec![

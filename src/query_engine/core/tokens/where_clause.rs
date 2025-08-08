@@ -1,10 +1,11 @@
 use super::condition::Condition;
+#[derive(Debug)]
 pub struct WhereClause {
     condition: Condition,
 }
 
 impl WhereClause {
-    pub fn parse(lexemes: &[&String], idx: usize) -> (Option<Self>, usize) {
+    pub fn parse(lexemes: &[&String], mut idx: usize) -> (Option<Self>, usize) {
         match lexemes.get(idx) {
             Some(val) => {
                 if (*val == "where") {
