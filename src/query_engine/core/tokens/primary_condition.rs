@@ -15,7 +15,7 @@ impl PrimaryCondition {
                     idx += 1;
                     let (condition_option, last_idx) = Condition::parse(lexemes, idx);
                     match condition_option {
-                        Some(condition) => match lexemes.get(last_idx) {
+                        Some(condition) => match lexemes.get(last_idx + 1) {
                             Some(lexeme) => {
                                 if *lexeme == ")" {
                                     return (

@@ -26,7 +26,7 @@ impl GetQuery {
                     selector.push("*".to_string());
                     let (where_clause, last_idx): (Option<WhereClause>, usize) =
                         WhereClause::parse(lexemes, 2);
-                    let function_call = FunctionCall::parse(lexemes, last_idx);
+                    let function_call = FunctionCall::parse(lexemes, last_idx + 1);
                     return Some(GetQuery {
                         selector,
                         where_clause,
@@ -44,7 +44,6 @@ impl GetQuery {
                         function_call,
                     });
                 } else {
-                    eprintln!("{:?}", selector);
                     eprintln!("1 a selector was expected for the get command");
                     return None;
                 }
@@ -80,17 +79,25 @@ impl GetQuery {
     pub fn evaluate(&self, columns: &IndexMap<String, Vec<String>>) -> () {
         let mut row: Vec<&String> = Vec::new();
         let mut idx = 0;
+        let mut cols_number = 0;
 
-        // will hold the rows that satisfies the condition if there is a function call at the end
+        // will hold the rows that satisfies the condition in case there is a function call at the end
         let mut valid_rows: Vec<Vec<&String>> = Vec::new();
 
+        if let Some((_key, values)) = columns.first() {
+            cols_number = values.len(); // Length of the first Vec<String>
+        } else {
+          return ();
+        }
+
         // this for loop will evaluate the where condition for every line
-        for _ in [0..columns.len()] {
+        for i in 0..cols_number {
             for key in columns.keys() {
                 if let Some(column) = columns.get(key) {
                     row.push(&column[idx]);
                 }
             }
+            idx += 1;
             if let Some(where_clause) = &self.where_clause {
                 if where_clause.evaluate(&columns.keys().collect(), &row) {
                     if let Some(_) = &self.function_call {
@@ -99,7 +106,8 @@ impl GetQuery {
                         self.print_row(&row);
                     }
                 } else {
-                  continue;
+                    row.clear();
+                    continue;
                 }
             } else {
                 if let Some(_) = &self.function_call {
@@ -108,7 +116,7 @@ impl GetQuery {
                     self.print_row(&row);
                 }
             }
-            idx = 0;
+            row.clear();
         }
         if let Some(function_call) = &self.function_call {
             function_call.evaluate(&columns.keys().collect(), &mut valid_rows);

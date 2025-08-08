@@ -13,9 +13,9 @@ impl AndCondition {
             Some(not_condition) => {
                 // if there is an andCondition we check if there is a orCondition after it by
                 // checkin if next lexeme is "or"
-                if let Some(lexeme) = lexemes.get(last_idx) {
+                if let Some(lexeme) = lexemes.get(last_idx + 1) {
                     if *lexeme == "and" {
-                        let (and_condition_option, last_idx) = Self::parse(lexemes, idx);
+                        let (and_condition_option, last_idx) = Self::parse(lexemes, last_idx + 2);
                         match and_condition_option {
                             Some(and_condition) => {
                                 return (
