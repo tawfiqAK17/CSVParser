@@ -1,7 +1,9 @@
-use crate::query_engine::core::tokens::value;
+use super::ParseResult;
+use super::value;
 
 use super::value::Value;
 use std::cmp::Ordering;
+use std::fmt::Display;
 
 #[derive(Debug)]
 pub enum ComparisonOps {
@@ -19,7 +21,26 @@ pub enum ComparisonOps {
     StartsWith,
     EndsWith,
 }
-
+impl Display for ComparisonOps {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ComparisonOps::Equal => eprint!("=="),
+            ComparisonOps::NotEqual => eprint!("!="),
+            ComparisonOps::LessThan => eprint!("<"),
+            ComparisonOps::GreaterThan => eprint!(">"),
+            ComparisonOps::LessThanOrEqual => eprint!("<="),
+            ComparisonOps::GreaterThanOrEqual => eprint!(">="),
+            ComparisonOps::BetweenOp(_, _) => eprint!("between"),
+            ComparisonOps::Is => eprint!("is"),
+            ComparisonOps::IsNot => eprint!("isnot"),
+            ComparisonOps::Contains => eprint!("contains"),
+            ComparisonOps::In => eprint!("in"),
+            ComparisonOps::StartsWith => eprint!("starts-with"),
+            ComparisonOps::EndsWith => eprint!("ends-with"),
+        }
+        Ok(())
+    }
+}
 #[derive(Debug)]
 pub struct Comparison {
     field_name: String,
@@ -28,7 +49,7 @@ pub struct Comparison {
 }
 
 impl Comparison {
-    pub fn parse(lexemes: &[&String], mut idx: usize) -> (Option<Self>, usize) {
+    pub fn parse(lexemes: &[&String], mut idx: usize) -> (ParseResult<Self>, usize) {
         if let Some(lexeme) = lexemes.get(idx) {
             if let Some(field_name) = value::parse_field_name(lexeme) {
                 idx += 1;
@@ -50,7 +71,7 @@ impl Comparison {
                         "ends-with" => comparison_op = ComparisonOps::EndsWith,
                         _ => {
                             eprintln!("expecting a comparison operator after the field name");
-                            return (None, idx);
+                            return (ParseResult::None, idx);
                         }
                     }
                     idx += 1;
@@ -66,10 +87,10 @@ impl Comparison {
                                 "{} can not be considered as a valid value to compare to",
                                 lexeme
                             );
-                            return (None, idx);
+                            return (ParseResult::None, idx);
                         }
                         return (
-                            Some(Comparison {
+                            ParseResult::Val(Comparison {
                                 field_name,
                                 comparison_op,
                                 rhs,
@@ -78,18 +99,21 @@ impl Comparison {
                         );
                     } else {
                     }
-                    eprintln!("expecting a value after the comparison operator");
-                    return (None, idx);
+                    eprintln!(
+                        "expecting a value after the comparison operator {}",
+                        comparison_op
+                    );
+                    return (ParseResult::Err, idx);
                 } else {
                     eprintln!("expecting a comparison operator after the field name");
-                    return (None, idx);
+                    return (ParseResult::Err, idx);
                 }
             } else {
                 eprintln!("expecting a field name for the comparison");
-                return (None, idx);
+                return (ParseResult::Err, idx);
             }
         } else {
-            return (None, idx);
+            return (ParseResult::None, idx);
         }
     }
     pub fn evaluate(&self, fields: &Vec<&String>, row: &Vec<&String>) -> bool {

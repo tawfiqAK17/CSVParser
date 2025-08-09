@@ -31,7 +31,6 @@ impl GetQuery {
                 if *lexeme == "*" {
                     selector.push("*".to_string());
                     let (where_clause_parse_result, last_idx) = WhereClause::parse(lexemes, 2);
-                    let function_call_parse_result = FunctionCall::parse(lexemes, last_idx);
                     match where_clause_parse_result {
                         ParseResult::Val(where_clause) => {
                             final_where_clause = Some(where_clause);
@@ -43,6 +42,7 @@ impl GetQuery {
                             return None;
                         }
                     }
+                    let function_call_parse_result = FunctionCall::parse(lexemes, last_idx);
                     match function_call_parse_result {
                         ParseResult::Val(function_call) => {
                             final_function_call = Some(function_call);
@@ -65,7 +65,6 @@ impl GetQuery {
                 if let Some((mut fields_names, idx)) = Self::parse_field_name_list(lexemes, 1) {
                     selector.append(&mut fields_names);
                     let (where_clause_parse_result, last_idx) = WhereClause::parse(lexemes, idx);
-                    let function_call_parse_result = FunctionCall::parse(lexemes, last_idx);
                     match where_clause_parse_result {
                         ParseResult::Val(where_clause) => {
                             final_where_clause = Some(where_clause);
@@ -77,6 +76,7 @@ impl GetQuery {
                             return None;
                         }
                     }
+                    let function_call_parse_result = FunctionCall::parse(lexemes, last_idx);
                     match function_call_parse_result {
                         ParseResult::Val(function_call) => {
                             final_function_call = Some(function_call);

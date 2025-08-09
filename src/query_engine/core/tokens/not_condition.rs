@@ -1,4 +1,5 @@
 use super::primary_condition::PrimaryCondition;
+use super::ParseResult;
 
 #[derive(Debug)]
 pub struct NotCondition {
@@ -7,7 +8,7 @@ pub struct NotCondition {
 }
 
 impl NotCondition {
-    pub fn parse(lexemes: &[&String], mut idx: usize) -> (Option<Self>, usize) {
+    pub fn parse(lexemes: &[&String], mut idx: usize) -> (ParseResult<Self>, usize) {
         let mut not: Option<()> = None;
         if let Some(lexeme) = lexemes.get(idx) {
             if *lexeme == "not" {
@@ -16,26 +17,29 @@ impl NotCondition {
             }
         } else {
             // it is the end of the lexemes
-            return (None, idx);
+            return (ParseResult::None, idx);
         }
         match lexemes.get(idx) {
             Some(lexeme) => {
-                let (primary_condition_option, last_idx) = PrimaryCondition::parse(lexemes, idx);
-                match primary_condition_option {
-                    Some(primary_condition) => {
-                        return (Some(NotCondition {
+                let (primary_condition_parse_result, last_idx) = PrimaryCondition::parse(lexemes, idx);
+                match primary_condition_parse_result {
+                    ParseResult::Val(primary_condition) => {
+                        return (ParseResult::Val(NotCondition {
                             not,
                             primary_condition,
                         }), last_idx);
                     }
-                    None => {
-                        return (None, idx);
+                    ParseResult::None => {
+                        return (ParseResult::None, idx);
+                    }
+                    ParseResult::Err => {
+                        return (ParseResult::Err, idx);
                     }
                 }
             }
             None => {
                 eprintln!("expecting a condition after the not key word");
-                return (None, idx);
+                return (ParseResult::Err, idx);
             }
         }
     }

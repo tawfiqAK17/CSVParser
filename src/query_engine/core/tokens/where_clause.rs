@@ -13,11 +13,12 @@ impl WhereClause {
                 if (*val == "where") {
                     let (option_condition, last_idx) = Condition::parse(lexemes, idx + 1);
                     match option_condition {
-                        Some(condition) => return (ParseResult::Val(WhereClause { condition }), last_idx),
-                        None => {
+                        ParseResult::Val(condition) => return (ParseResult::Val(WhereClause { condition }), last_idx),
+                        ParseResult::None => {
                             eprintln!("expecting a condition after the where key word");
                             return (ParseResult::Err, idx);
                         }
+                        ParseResult::Err => return (ParseResult::Err, idx)
                     }
                 } else {
                     return (ParseResult::None, idx);

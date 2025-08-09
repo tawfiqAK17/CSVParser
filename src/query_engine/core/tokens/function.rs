@@ -163,14 +163,10 @@ impl Function {
             }
 
             Functions::Head(arg) => {
-                for row in rows {
-                  row.drain(arg.clone()..);
-                }
+                rows.drain(arg.clone()..);
             }
             Functions::Tail(arg) => {
-                for row in rows {
-                  row.drain(0..row.len() - arg);
-                }
+                rows.drain(0..rows.len() - arg);
             }
         }
     }

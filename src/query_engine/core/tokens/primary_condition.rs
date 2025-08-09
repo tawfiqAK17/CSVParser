@@ -1,3 +1,4 @@
+use super::ParseResult;
 use super::comparison::Comparison;
 use super::condition::Condition;
 
@@ -8,18 +9,18 @@ pub struct PrimaryCondition {
 }
 
 impl PrimaryCondition {
-    pub fn parse(lexemes: &[&String], mut idx: usize) -> (Option<Self>, usize) {
+    pub fn parse(lexemes: &[&String], mut idx: usize) -> (ParseResult<Self>, usize) {
         match lexemes.get(idx) {
             Some(lexeme) => {
                 if *lexeme == "(" {
                     idx += 1;
-                    let (condition_option, last_idx) = Condition::parse(lexemes, idx);
-                    match condition_option {
-                        Some(condition) => match lexemes.get(last_idx + 1) {
+                    let (condition_parse_result, last_idx) = Condition::parse(lexemes, idx);
+                    match condition_parse_result {
+                        ParseResult::Val(condition) => match lexemes.get(last_idx + 1) {
                             Some(lexeme) => {
                                 if *lexeme == ")" {
                                     return (
-                                        Some(PrimaryCondition {
+                                        ParseResult::Val(PrimaryCondition {
                                             comparison: None,
                                             condition: Some(Box::new(condition)),
                                         }),
@@ -27,38 +28,44 @@ impl PrimaryCondition {
                                     );
                                 } else {
                                     eprintln!("missing a ')' after the condition");
-                                    return (None, last_idx);
+                                    return (ParseResult::Err, last_idx);
                                 }
                             }
                             None => {
                                 eprintln!("missing a ')' after the condition");
-                                return (None, last_idx);
+                                return (ParseResult::Err, last_idx);
                             }
                         },
-                        None => {
+                        ParseResult::None => {
                             eprintln!("missing a condition after the '('");
-                            return (None, last_idx);
+                            return (ParseResult::Err, last_idx);
+                        }
+                        ParseResult::Err => {
+                            return (ParseResult::Err, last_idx);
                         }
                     }
                 } else {
-                    let (comparison_option, last_idx) = Comparison::parse(lexemes, idx);
-                    match comparison_option {
-                        Some(comparison) => {
+                    let (comparison_parse_result, last_idx) = Comparison::parse(lexemes, idx);
+                    match comparison_parse_result {
+                        ParseResult::Val(comparison) => {
                             return (
-                                Some(PrimaryCondition {
+                                ParseResult::Val(PrimaryCondition {
                                     comparison: Some(comparison),
                                     condition: None,
                                 }),
                                 last_idx,
                             );
                         }
-                        None => {
-                            return (None, idx);
+                        ParseResult::None => {
+                            return (ParseResult::None, idx);
+                        }
+                        ParseResult::Err => {
+                            return (ParseResult::Err, idx);
                         }
                     }
                 }
             }
-            None => return (None, idx),
+            None => return (ParseResult::None, idx),
         }
     }
     pub fn evaluate(&self, fields: &Vec<&String>, row: &Vec<&String>) -> bool {

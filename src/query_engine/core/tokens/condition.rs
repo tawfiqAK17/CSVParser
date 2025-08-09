@@ -1,3 +1,5 @@
+use super::ParseResult;
+
 use super::or_condition::OrCondition;
 #[derive(Debug)]
 pub struct Condition {
@@ -5,13 +7,14 @@ pub struct Condition {
 }
 
 impl Condition {
-    pub fn parse(lexemes: &[&String], idx: usize) -> (Option<Self>, usize) {
-        let (or_condition_option, last_idx) = OrCondition::parse(lexemes, idx);
-        match or_condition_option {
-            Some(or_condition) => {
-                return (Some(Condition { or_condition }), last_idx);
+    pub fn parse(lexemes: &[&String], idx: usize) -> (ParseResult<Self>, usize) {
+        let (or_condition_parse_result, last_idx) = OrCondition::parse(lexemes, idx);
+        match or_condition_parse_result {
+            ParseResult::Val(or_condition) => {
+                return (ParseResult::Val(Condition { or_condition }), last_idx);
             }
-            None => return (None, last_idx),
+            ParseResult::None => return (ParseResult::None, last_idx),
+            ParseResult::Err => return (ParseResult::Err, last_idx),
         }
     }
     pub fn evaluate(&self, fields: &Vec<&String>, row: &Vec<&String>) -> bool {
