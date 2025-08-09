@@ -255,7 +255,6 @@ impl Comparison {
                     }
                 }
                 _ => {
-                    println!("shit");
                     return false;
                 }
             },

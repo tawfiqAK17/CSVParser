@@ -1,6 +1,8 @@
+use super::ParseResult;
+
 use super::value;
 use core::f32;
-use std::{cmp::Ordering, process::exit};
+use std::cmp::Ordering;
 
 #[derive(Debug)]
 pub enum Functions {
@@ -18,41 +20,41 @@ pub struct Function {
 }
 
 impl Function {
-    pub fn parse(lexemes: &[&String], mut idx: usize) -> (Option<Self>, usize) {
+    pub fn parse(lexemes: &[&String], mut idx: usize) -> (ParseResult<Self>, usize) {
         match lexemes.get(idx) {
             Some(lexeme) => {
                 idx += 1;
                 match lexemes.get(idx) {
                     Some(param) => match value::parse_field_name(param) {
-                        Some(feild_name) => match lexeme.as_str() {
+                        Some(field_name) => match lexeme.as_str() {
                             "sort" => {
                                 return (
-                                    Some(Function {
-                                        function_name: Functions::Sort(param.to_string()),
+                                    ParseResult::Val(Function {
+                                        function_name: Functions::Sort(field_name),
                                     }),
                                     idx + 1,
                                 );
                             }
                             "reverse-sort" => {
                                 return (
-                                    Some(Function {
-                                        function_name: Functions::ReverseSort(param.to_string()),
+                                    ParseResult::Val(Function {
+                                        function_name: Functions::ReverseSort(field_name),
                                     }),
                                     idx + 1,
                                 );
                             }
                             "nsort" => {
                                 return (
-                                    Some(Function {
-                                        function_name: Functions::NSort(param.to_string()),
+                                    ParseResult::Val(Function {
+                                        function_name: Functions::NSort(field_name),
                                     }),
                                     idx + 1,
                                 );
                             }
                             "reverse-nsort" => {
                                 return (
-                                    Some(Function {
-                                        function_name: Functions::ReverseNSort(param.to_string()),
+                                    ParseResult::Val(Function {
+                                        function_name: Functions::ReverseNSort(field_name),
                                     }),
                                     idx + 1,
                                 );
@@ -62,18 +64,18 @@ impl Function {
                                     "the function {} expect a parameter of type number",
                                     lexeme
                                 );
-                                return (None, idx);
+                                return (ParseResult::Err, idx);
                             }
                             _ => {
                                 eprintln!("there is no function named {}", lexeme);
-                                return (None, idx);
+                                return (ParseResult::Err, idx);
                             }
                         },
                         None => match value::parse_number(param) {
                             Some(val) => match lexeme.as_str() {
                                 "head" => {
                                     return (
-                                        Some(Function {
+                                        ParseResult::Val(Function {
                                             function_name: Functions::Head(val.round() as usize),
                                         }),
                                         idx + 1,
@@ -81,7 +83,7 @@ impl Function {
                                 }
                                 "tail" => {
                                     return (
-                                        Some(Function {
+                                        ParseResult::Val(Function {
                                             function_name: Functions::Tail(val.round() as usize),
                                         }),
                                         idx + 1,
@@ -92,28 +94,28 @@ impl Function {
                                         "the function {} expect a parameter of type field name",
                                         lexeme
                                     );
-                                    return (None, idx);
+                                    return (ParseResult::Err, idx);
                                 }
                                 _ => {
                                     eprintln!("there is no function named {}", lexeme);
-                                    return (None, idx);
+                                    return (ParseResult::Err, idx);
                                 }
                             },
                             None => {
                                 eprintln!(
                                     "the parameters of function can only be a field name or a number"
                                 );
-                                return (None, idx);
+                                return (ParseResult::Err, idx);
                             }
                         },
                     },
                     None => {
                         eprintln!("expecting a parameter for the function {}", lexeme);
-                        return (None, idx);
+                        return (ParseResult::Err, idx);
                     }
                 }
             }
-            None => return (None, idx),
+            None => return (ParseResult::None, idx),
         }
     }
     pub fn run(&self, fields: &Vec<&String>, mut rows: &mut Vec<Vec<&String>>) {
@@ -135,7 +137,6 @@ impl Function {
                     }
                     None => {
                         eprintln!("no field named {}", field_name);
-                        exit(1);
                     }
                 }
             }
@@ -146,7 +147,6 @@ impl Function {
                     }
                     None => {
                         eprintln!("no field named {}", field_name);
-                        exit(1);
                     }
                 }
             }
@@ -158,16 +158,19 @@ impl Function {
                     }
                     None => {
                         eprintln!("no field named {}", field_name);
-                        exit(1);
                     }
                 }
             }
 
             Functions::Head(arg) => {
-                self.print_rows(&rows[..arg.clone()]);
+                for row in rows {
+                  row.drain(arg.clone()..);
+                }
             }
             Functions::Tail(arg) => {
-                self.print_rows(&rows[arg.clone()..]);
+                for row in rows {
+                  row.drain(0..row.len() - arg);
+                }
             }
         }
     }
@@ -218,18 +221,6 @@ impl Function {
             return Ordering::Greater;
         }
         return Ordering::Less;
-    }
-    fn print_row(&self, row: &Vec<&String>) {
-        for val in row {
-            print!("{val},");
-        }
-        println!();
-    }
-
-    fn print_rows(&self, rows: &[Vec<&String>]) {
-        for row in rows {
-            self.print_row(&row);
-        }
     }
 }
 

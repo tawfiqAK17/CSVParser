@@ -1,3 +1,6 @@
+use std::string::ParseError;
+
+use crate::query_engine::core::tokens::ParseResult;
 use crate::query_engine::core::tokens::value::parse_field_name;
 
 use super::function_call::FunctionCall;
@@ -22,29 +25,76 @@ impl GetQuery {
         }
         match lexemes.get(1) {
             Some(lexeme) => {
+                let mut final_where_clause: Option<WhereClause>;
+                let mut final_function_call: Option<FunctionCall>;
+
                 if *lexeme == "*" {
                     selector.push("*".to_string());
-                    let (where_clause, last_idx): (Option<WhereClause>, usize) =
-                        WhereClause::parse(lexemes, 2);
-                    let function_call = FunctionCall::parse(lexemes, last_idx + 1);
+                    let (where_clause_parse_result, last_idx) = WhereClause::parse(lexemes, 2);
+                    let function_call_parse_result = FunctionCall::parse(lexemes, last_idx);
+                    match where_clause_parse_result {
+                        ParseResult::Val(where_clause) => {
+                            final_where_clause = Some(where_clause);
+                        }
+                        ParseResult::None => {
+                            final_where_clause = None;
+                        }
+                        ParseResult::Err => {
+                            return None;
+                        }
+                    }
+                    match function_call_parse_result {
+                        ParseResult::Val(function_call) => {
+                            final_function_call = Some(function_call);
+                        }
+                        ParseResult::None => {
+                            final_function_call = None;
+                        }
+                        ParseResult::Err => {
+                            return None;
+                        }
+                    }
                     return Some(GetQuery {
                         selector,
-                        where_clause,
-                        function_call,
+                        where_clause: final_where_clause,
+                        function_call: final_function_call,
                     });
                 }
+
                 // the case where the selector is a field name or a list of theme
                 if let Some((mut fields_names, idx)) = Self::parse_field_name_list(lexemes, 1) {
                     selector.append(&mut fields_names);
-                    let (where_clause, last_idx) = WhereClause::parse(lexemes, idx);
-                    let function_call = FunctionCall::parse(lexemes, last_idx + 1);
+                    let (where_clause_parse_result, last_idx) = WhereClause::parse(lexemes, idx);
+                    let function_call_parse_result = FunctionCall::parse(lexemes, last_idx);
+                    match where_clause_parse_result {
+                        ParseResult::Val(where_clause) => {
+                            final_where_clause = Some(where_clause);
+                        }
+                        ParseResult::None => {
+                            final_where_clause = None;
+                        }
+                        ParseResult::Err => {
+                            return None;
+                        }
+                    }
+                    match function_call_parse_result {
+                        ParseResult::Val(function_call) => {
+                            final_function_call = Some(function_call);
+                        }
+                        ParseResult::None => {
+                            final_function_call = None;
+                        }
+                        ParseResult::Err => {
+                            return None;
+                        }
+                    }
                     return Some(GetQuery {
                         selector,
-                        where_clause,
-                        function_call,
+                        where_clause: final_where_clause,
+                        function_call: final_function_call,
                     });
                 } else {
-                    eprintln!(" a selector was expected for the get command");
+                    eprintln!("a selector was expected for the get command");
                     return None;
                 }
             }
@@ -63,13 +113,13 @@ impl GetQuery {
         while let Some(lexeme) = lexemes.get(start_idx) {
             if let Some(field_name) = value::parse_field_name(lexeme) {
                 fields_names.push(field_name.clone());
-                start_idx += 1;
             } else {
                 if fields_names.is_empty() {
                     return None;
                 }
                 return Some((fields_names, start_idx));
             }
+            start_idx += 1;
         }
         if fields_names.is_empty() {
             return None;
@@ -139,11 +189,11 @@ impl GetQuery {
     }
     fn print_row(&self, idxs: &Vec<usize>, row: &Vec<&String>) {
         if idxs.is_empty() {
-          for val in row {
-            print!("{val},");
-          }
-          println!();
-          return;
+            for val in row {
+                print!("{val},");
+            }
+            println!();
+            return;
         }
         for i in 0..row.len() {
             if idxs.contains(&i) {
