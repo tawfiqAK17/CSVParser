@@ -11,3 +11,9 @@ pub mod query;
 pub mod set_query;
 pub mod value;
 pub mod where_clause;
+
+pub enum ParseResult<T> {
+    Val(T),
+    None,
+    Err,
+}

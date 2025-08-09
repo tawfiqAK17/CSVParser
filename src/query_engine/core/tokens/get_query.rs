@@ -44,7 +44,7 @@ impl GetQuery {
                         function_call,
                     });
                 } else {
-                    eprintln!("1 a selector was expected for the get command");
+                    eprintln!(" a selector was expected for the get command");
                     return None;
                 }
             }
@@ -81,13 +81,13 @@ impl GetQuery {
         let mut idx = 0;
         let mut cols_number = 0;
 
-        // will hold the rows that satisfies the condition in case there is a function call at the end
+        // will hold the rows that satisfies the condition
         let mut valid_rows: Vec<Vec<&String>> = Vec::new();
 
         if let Some((_key, values)) = columns.first() {
             cols_number = values.len(); // Length of the first Vec<String>
         } else {
-          return ();
+            return ();
         }
 
         // this for loop will evaluate the where condition for every line
@@ -100,38 +100,61 @@ impl GetQuery {
             idx += 1;
             if let Some(where_clause) = &self.where_clause {
                 if where_clause.evaluate(&columns.keys().collect(), &row) {
-                    if let Some(_) = &self.function_call {
-                        valid_rows.push(row.clone());
-                    } else {
-                        self.print_row(&row);
-                    }
+                    valid_rows.push(row.clone());
                 } else {
                     row.clear();
                     continue;
                 }
             } else {
-                if let Some(_) = &self.function_call {
-                    valid_rows.push(row.clone());
-                } else {
-                    self.print_row(&row);
-                }
+                valid_rows.push(row.clone());
             }
             row.clear();
         }
         if let Some(function_call) = &self.function_call {
             function_call.evaluate(&columns.keys().collect(), &mut valid_rows);
         }
+        self.print_result(&columns.keys().collect(), &valid_rows);
         ()
     }
-    fn print_row(&self, row: &Vec<&String>) {
-        for val in row {
+    fn print_result(&self, fields: &Vec<&String>, rows: &Vec<Vec<&String>>) {
+        let mut idxs: Vec<usize> = Vec::new();
+        let mut select_all: bool = false;
+        for selector in self.selector.iter() {
+            if selector == "*" {
+                select_all = true;
+                break;
+            }
+            match fields.iter().position(|&f| f == selector) {
+                Some(idx) => idxs.push(idx),
+                None => {
+                    eprintln!("no field named {}", selector);
+                    return;
+                }
+            }
+        }
+        if select_all {
+            idxs.clear();
+        }
+        self.print_rows(&idxs, rows);
+    }
+    fn print_row(&self, idxs: &Vec<usize>, row: &Vec<&String>) {
+        if idxs.is_empty() {
+          for val in row {
             print!("{val},");
+          }
+          println!();
+          return;
+        }
+        for i in 0..row.len() {
+            if idxs.contains(&i) {
+                print!("{}", row[i]);
+            }
         }
         println!();
     }
-    fn print_rows(&self, rows: Vec<Vec<&String>>) {
+    fn print_rows(&self, idxs: &Vec<usize>, rows: &Vec<Vec<&String>>) {
         for row in rows {
-            self.print_row(&row);
+            self.print_row(idxs, &row);
         }
     }
 }
