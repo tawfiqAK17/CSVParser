@@ -27,7 +27,7 @@ impl WhereClause {
             None => return (ParseResult::None, idx),
         }
     }
-    pub fn evaluate(&self, fields: &Vec<&String>, row: &Vec<&String>) -> bool {
+    pub fn evaluate(&self, fields: &Vec<String>, row: &Vec<String>) -> bool {
         return self.condition.evaluate(fields, row);
     }
 }

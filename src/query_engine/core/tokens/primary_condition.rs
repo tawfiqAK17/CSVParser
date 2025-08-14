@@ -68,7 +68,7 @@ impl PrimaryCondition {
             None => return (ParseResult::None, idx),
         }
     }
-    pub fn evaluate(&self, fields: &Vec<&String>, row: &Vec<&String>) -> bool {
+    pub fn evaluate(&self, fields: &Vec<String>, row: &Vec<String>) -> bool {
         match &self.comparison {
             Some(comparison) => return comparison.evaluate(fields, row),
             None => {}

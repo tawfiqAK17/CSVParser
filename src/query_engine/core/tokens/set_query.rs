@@ -1,9 +1,8 @@
-use indexmap::IndexMap;
 #[derive(Debug)]
 pub struct SetQuery {}
 
 impl SetQuery {
-    pub fn evaluate(&self, columns: &mut IndexMap<String, Vec<String>>) -> () {
+    pub fn evaluate(&self, fields: &mut Vec<String>, rows: &mut Vec<Vec<String>>) -> () {
         ()
     }
 }

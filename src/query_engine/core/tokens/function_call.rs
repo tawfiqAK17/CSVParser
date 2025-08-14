@@ -28,12 +28,12 @@ impl FunctionCall {
             ParseResult::Err => ParseResult::Err,
         }
     }
-    pub fn evaluate(&self, fields: &Vec<&String>, mut valid_rows: &mut Vec<Vec<&String>>) -> () {
+    pub fn evaluate(&self, fields: &Vec<String>, valid_rows: &mut Vec<&Vec<String>>) -> () {
         if let Some(function) = &self.function {
-            function.run(&fields, &mut valid_rows);
+            function.run(&fields, valid_rows);
         }
         if let Some(function_call) = &self.function_call {
-            function_call.evaluate(&fields, &mut valid_rows);
+            function_call.evaluate(&fields, valid_rows);
         }
     }
 }

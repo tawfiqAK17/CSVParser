@@ -118,10 +118,10 @@ impl Function {
             None => return (ParseResult::None, idx),
         }
     }
-    pub fn run(&self, fields: &Vec<&String>, mut rows: &mut Vec<Vec<&String>>) {
+    pub fn run(&self, fields: &Vec<String>, rows: &mut Vec<&Vec<String>>) {
         match &self.function_name {
             Functions::Sort(field_name) => {
-                match fields.iter().position(|&name| *name == *field_name) {
+                match fields.iter().position(|name| name == field_name) {
                     Some(idx) => {
                         self.sort(idx, rows);
                     }
@@ -131,7 +131,7 @@ impl Function {
                 }
             }
             Functions::ReverseSort(field_name) => {
-                match fields.iter().position(|&name| *name == *field_name) {
+                match fields.iter().position(|name| name == field_name) {
                     Some(idx) => {
                         self.reverse_sort(idx, rows);
                     }
@@ -141,7 +141,7 @@ impl Function {
                 }
             }
             Functions::NSort(field_name) => {
-                match fields.iter().position(|&name| *name == *field_name) {
+                match fields.iter().position(|name| name == field_name) {
                     Some(idx) => {
                         self.n_sort(idx, rows);
                     }
@@ -152,7 +152,7 @@ impl Function {
             }
 
             Functions::ReverseNSort(field_name) => {
-                match fields.iter().position(|&name| *name == *field_name) {
+                match fields.iter().position(|name| name == field_name) {
                     Some(idx) => {
                         self.n_reverse_sort(idx, rows);
                     }
@@ -171,19 +171,19 @@ impl Function {
         }
     }
 
-    fn sort(&self, field_idx: usize, rows: &mut Vec<Vec<&String>>) {
-        rows.sort_by(|a, b| a[field_idx].cmp(b[field_idx]));
+    fn sort(&self, field_idx: usize, rows: &mut Vec<&Vec<String>>) {
+        rows.sort_by(|a, b| a[field_idx].cmp(&b[field_idx]));
     }
 
-    fn reverse_sort(&self, field_idx: usize, rows: &mut Vec<Vec<&String>>) {
-        rows.sort_by(|a, b| b[field_idx].cmp(a[field_idx]));
+    fn reverse_sort(&self, field_idx: usize, rows: &mut Vec<&Vec<String>>) {
+        rows.sort_by(|a, b| b[field_idx].cmp(&a[field_idx]));
     }
 
-    fn n_sort(&self, field_idx: usize, rows: &mut Vec<Vec<&String>>) {
+    fn n_sort(&self, field_idx: usize, rows: &mut Vec<&Vec<String>>) {
         rows.sort_by(|a, b| self.compaire_numbers(&a[field_idx], &b[field_idx]));
     }
 
-    fn n_reverse_sort(&self, field_idx: usize, rows: &mut Vec<Vec<&String>>) {
+    fn n_reverse_sort(&self, field_idx: usize, rows: &mut Vec<&Vec<String>>) {
         rows.sort_by(
             |a, b| match self.compaire_numbers(&a[field_idx], &b[field_idx]) {
                 Ordering::Less => return Ordering::Greater,
@@ -194,8 +194,8 @@ impl Function {
     }
 
     fn compaire_numbers(&self, a: &String, b: &String) -> Ordering {
-        let mut lhs: f32;
-        let mut rhs: f32;
+        let lhs: f32;
+        let rhs: f32;
         match a.parse::<f32>() {
             Ok(val) => lhs = val,
             Err(_) => {
@@ -231,6 +231,13 @@ mod tests {
         ];
         (fields, rows)
     }
+    fn prepair_rows(rows: &Vec<Vec<String>>) -> Vec<&Vec<String>> {
+        let mut rows_ref: Vec<&Vec<String>> = Vec::new();
+        for row in rows.iter() {
+            rows_ref.push(row); 
+        }
+        return rows_ref.clone();
+    }
     fn get_empty_data() -> (Vec<String>, Vec<Vec<String>>) {
         let fields: Vec<String> = vec![];
         let rows: Vec<Vec<String>> = vec![];
@@ -240,12 +247,11 @@ mod tests {
     fn sort_test() {
         use super::*;
         let (fields, rows) = get_data();
-        let fields_ref: Vec<&String> = fields.iter().collect();
-        let mut rows_ref: Vec<Vec<&String>> = rows.iter().map(|row| row.iter().collect()).collect();
+        let mut rows_ref = prepair_rows(&rows);
         let function = Function {
             function_name: Functions::Sort("name".to_string()),
         };
-        function.run(&fields_ref, &mut rows_ref);
+        function.run(&fields, &mut rows_ref);
         let expected_rows = vec![
             vec!["bob", "45", "60"],
             vec!["jack", "20", "90"],
@@ -258,12 +264,11 @@ mod tests {
     fn empty_sort_test() {
         use super::*;
         let (fields, rows) = get_empty_data();
-        let fields_ref: Vec<&String> = fields.iter().collect();
-        let mut rows_ref: Vec<Vec<&String>> = rows.iter().map(|row| row.iter().collect()).collect();
+        let mut rows_ref = prepair_rows(&rows);
         let function = Function {
             function_name: Functions::Sort("name".to_string()),
         };
-        function.run(&fields_ref, &mut rows_ref);
+        function.run(&fields, &mut rows_ref);
         let expected_rows = vec![];
         assert!(equal_rows(&expected_rows, &rows_ref))
     }
@@ -272,12 +277,11 @@ mod tests {
     fn reverse_sort_test() {
         use super::*;
         let (fields, rows) = get_data();
-        let fields_ref: Vec<&String> = fields.iter().collect();
-        let mut rows_ref: Vec<Vec<&String>> = rows.iter().map(|row| row.iter().collect()).collect();
+        let mut rows_ref = prepair_rows(&rows);
         let function = Function {
             function_name: Functions::ReverseSort("name".to_string()),
         };
-        function.run(&fields_ref, &mut rows_ref);
+        function.run(&fields, &mut rows_ref);
         let expected_rows = vec![
             vec!["ossama", "27", "100"],
             vec!["jack", "20", "90"],
@@ -290,12 +294,11 @@ mod tests {
     fn n_reverse_sort_test() {
         use super::*;
         let (fields, rows) = get_data();
-        let fields_ref: Vec<&String> = fields.iter().collect();
-        let mut rows_ref: Vec<Vec<&String>> = rows.iter().map(|row| row.iter().collect()).collect();
+        let mut rows_ref = prepair_rows(&rows);
         let function = Function {
             function_name: Functions::ReverseNSort("points".to_string()),
         };
-        function.run(&fields_ref, &mut rows_ref);
+        function.run(&fields, &mut rows_ref);
         let expected_rows = vec![
             vec!["ossama", "27", "100"],
             vec!["jack", "20", "90"],
@@ -308,12 +311,11 @@ mod tests {
     fn n_sort_test() {
         use super::*;
         let (fields, rows) = get_data();
-        let fields_ref: Vec<&String> = fields.iter().collect();
-        let mut rows_ref: Vec<Vec<&String>> = rows.iter().map(|row| row.iter().collect()).collect();
+        let mut rows_ref = prepair_rows(&rows);
         let function = Function {
             function_name: Functions::NSort("points".to_string()),
         };
-        function.run(&fields_ref, &mut rows_ref);
+        function.run(&fields, &mut rows_ref);
         let expected_rows = vec![
             vec!["bob", "45", "60"],
             vec!["jack", "20", "90"],
@@ -326,17 +328,16 @@ mod tests {
     fn empty_n_sort_test() {
         use super::*;
         let (fields, rows) = get_empty_data();
-        let fields_ref: Vec<&String> = fields.iter().collect();
-        let mut rows_ref: Vec<Vec<&String>> = rows.iter().map(|row| row.iter().collect()).collect();
+        let mut rows_ref = prepair_rows(&rows);
         let function = Function {
             function_name: Functions::Sort("age".to_string()),
         };
-        function.run(&fields_ref, &mut rows_ref);
+        function.run(&fields, &mut rows_ref);
         let expected_rows = vec![];
         assert!(equal_rows(&expected_rows, &rows_ref))
     }
 
-    fn equal_rows(expected_rows: &Vec<Vec<&str>>, rows: &Vec<Vec<&String>>) -> bool {
+    fn equal_rows(expected_rows: &Vec<Vec<&str>>, rows: &Vec<&Vec<String>>) -> bool {
         if expected_rows.len() != rows.len() {
             return false;
         }
@@ -345,7 +346,7 @@ mod tests {
                 return false;
             }
             for (expected_cell, actual_cell) in expected_row.iter().zip(actual_row.iter()) {
-                if *expected_cell != **actual_cell {
+                if *expected_cell != *actual_cell {
                     return false;
                 }
             }

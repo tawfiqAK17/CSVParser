@@ -1,12 +1,12 @@
 mod tokens;
-use indexmap::IndexMap;
-pub fn query(lexemes: &[&String], columns: &mut IndexMap<String, Vec<String>>) {
+
+pub fn query(lexemes: &[&String], fields: &mut Vec<String>, rows: &mut Vec<Vec<String>>) {
     let query = tokens::query::Query::parse(lexemes);
     match query {
         Some(q) => {
-println!("{:?}", q);
-q.evaluate(columns);
-        },
-        None => {},
+            println!("{:?}", q);
+            q.evaluate(fields, rows);
+        }
+        None => {}
     }
 }

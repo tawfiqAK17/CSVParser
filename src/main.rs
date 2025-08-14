@@ -18,23 +18,27 @@ fn main() {
             exit(2);
         }
     }
-    let mut columns: IndexMap<String, Vec<String>> = IndexMap::new();
+    let (mut fields, mut rows): (Vec<String>, Vec<Vec<String>>);
     match csv_parser::parse_file("/home/tawfiq/test.csv") {
-        Ok(val) => {
-            columns = val;
+        Some((f, r)) => {
+            fields = f;
+            rows = r;
         }
-        Err(error) => eprintln!("{error}"),
+        None => return,
     }
 
     // main loop
     loop {
         let mut command = String::new();
         println!("command: ");
-        stdin()
-            .read_line(&mut command)
-            .expect("failed to read the command");
-
-        query_engine::query(command.trim_end().to_string(), &mut columns);
-        println!();
+        match stdin().read_line(&mut command) {
+            Ok(_) => {
+                query_engine::query(command.trim_end().to_string(), &mut fields, &mut rows);
+                println!();
+            }
+            Err(_) => {
+                eprintln!("failed to read your command, please try again");
+            }
+        }
     }
 }

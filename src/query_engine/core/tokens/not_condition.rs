@@ -43,7 +43,7 @@ impl NotCondition {
             }
         }
     }
-    pub fn evaluate(&self, fields: &Vec<&String>, row: &Vec<&String>) -> bool {
+    pub fn evaluate(&self, fields: &Vec<String>, row: &Vec<String>) -> bool {
         match &self.not {
             Some(_) => return !self.primary_condition.evaluate(fields, row),
             None => return self.primary_condition.evaluate(fields, row),

@@ -49,7 +49,7 @@ impl OrCondition {
             ParseResult::Err => return (ParseResult::Err, last_idx),
         }
     }
-    pub fn evaluate(&self, fields: &Vec<&String>, row: &Vec<&String>) -> bool {
+    pub fn evaluate(&self, fields: &Vec<String>, row: &Vec<String>) -> bool {
         match &self.or_condition {
             Some(or_condition) => {
                 return or_condition.evaluate(fields, row)

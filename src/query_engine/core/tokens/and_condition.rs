@@ -49,7 +49,7 @@ impl AndCondition {
             ParseResult::Err => return (ParseResult::Err, last_idx),
         }
     }
-    pub fn evaluate(&self, fields: &Vec<&String>, row: &Vec<&String>) -> bool {
+    pub fn evaluate(&self, fields: &Vec<String>, row: &Vec<String>) -> bool {
         match &self.and_condition {
             Some(and_condition) => {
                 return self.not_condition.evaluate(fields, row)

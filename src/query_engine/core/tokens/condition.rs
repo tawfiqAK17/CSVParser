@@ -17,7 +17,7 @@ impl Condition {
             ParseResult::Err => return (ParseResult::Err, last_idx),
         }
     }
-    pub fn evaluate(&self, fields: &Vec<&String>, row: &Vec<&String>) -> bool {
+    pub fn evaluate(&self, fields: &Vec<String>, row: &Vec<String>) -> bool {
         return self.or_condition.evaluate(fields, row);
     }
 }

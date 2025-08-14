@@ -116,9 +116,9 @@ impl Comparison {
             return (ParseResult::None, idx);
         }
     }
-    pub fn evaluate(&self, fields: &Vec<&String>, row: &Vec<&String>) -> bool {
+    pub fn evaluate(&self, fields: &Vec<String>, row: &Vec<String>) -> bool {
         match &self.comparison_op {
-            ComparisonOps::Equal => match &&self.rhs {
+            ComparisonOps::Equal => match &self.rhs {
                 Value::FieldName(field) => match self.n_compaire_to_field(field, fields, row) {
                     Some(order) => match order {
                         Ordering::Equal => return true,
@@ -199,7 +199,7 @@ impl Comparison {
                     && self.less_than_or_equal(val2, &fields, row);
             }
             ComparisonOps::Is => match &self.rhs {
-                Value::Literal(val) => match fields.iter().position(|&f| *f == self.field_name) {
+                Value::Literal(val) => match fields.iter().position(|f| *f == self.field_name) {
                     Some(idx) => return *row[idx] == val.to_string(),
                     None => {
                         eprintln!("no field named {}", self.field_name);
@@ -207,8 +207,8 @@ impl Comparison {
                     }
                 },
                 Value::FieldName(field_name) => {
-                    match fields.iter().position(|&f| *f == self.field_name) {
-                        Some(idx1) => match fields.iter().position(|&f| *f == *field_name) {
+                    match fields.iter().position(|f| *f == self.field_name) {
+                        Some(idx1) => match fields.iter().position(|f| *f == *field_name) {
                             Some(idx2) => {
                                 return row[idx1] == row[idx2];
                             }
@@ -227,7 +227,7 @@ impl Comparison {
                 _ => todo!(),
             },
             ComparisonOps::IsNot => match &self.rhs {
-                Value::Literal(val) => match fields.iter().position(|&f| *f == self.field_name) {
+                Value::Literal(val) => match fields.iter().position(|f| *f == self.field_name) {
                     Some(idx) => return *row[idx] != *val,
                     None => {
                         eprintln!("no field named {}", self.field_name);
@@ -235,8 +235,8 @@ impl Comparison {
                     }
                 },
                 Value::FieldName(field_name) => {
-                    match fields.iter().position(|&f| *f == self.field_name) {
-                        Some(idx1) => match fields.iter().position(|&f| *f == *field_name) {
+                    match fields.iter().position(|f| *f == self.field_name) {
+                        Some(idx1) => match fields.iter().position(|f| f == field_name) {
                             Some(idx2) => {
                                 return row[idx1] != row[idx2];
                             }
@@ -256,7 +256,7 @@ impl Comparison {
             },
 
             ComparisonOps::Contains => match &self.rhs {
-                Value::Literal(val) => match fields.iter().position(|&f| *f == self.field_name) {
+                Value::Literal(val) => match fields.iter().position(|f| *f == self.field_name) {
                     Some(idx) => return row[idx].contains(val),
                     None => {
                         eprintln!("no field named {}", self.field_name);
@@ -264,9 +264,9 @@ impl Comparison {
                     }
                 },
                 Value::FieldName(field_name) => {
-                    match fields.iter().position(|&f| *f == self.field_name) {
-                        Some(idx1) => match fields.iter().position(|&f| *f == *field_name) {
-                            Some(idx2) => return row[idx1].contains(row[idx2]),
+                    match fields.iter().position(|f| *f == self.field_name) {
+                        Some(idx1) => match fields.iter().position(|f| f == field_name) {
+                            Some(idx2) => return row[idx1].contains(&row[idx2]),
                             None => {
                                 eprintln!("no field named {}", self.field_name);
                                 return false;
@@ -283,7 +283,7 @@ impl Comparison {
                 }
             },
             ComparisonOps::StartsWith => match &self.rhs {
-                Value::Literal(val) => match fields.iter().position(|&f| *f == self.field_name) {
+                Value::Literal(val) => match fields.iter().position(|f| *f == self.field_name) {
                     Some(idx) => return row[idx].starts_with(val),
                     None => {
                         eprintln!("no field named {}", self.field_name);
@@ -291,9 +291,9 @@ impl Comparison {
                     }
                 },
                 Value::FieldName(field_name) => {
-                    match fields.iter().position(|&f| *f == self.field_name) {
-                        Some(idx1) => match fields.iter().position(|&f| *f == *field_name) {
-                            Some(idx2) => return row[idx1].starts_with(row[idx2]),
+                    match fields.iter().position(|f| *f == self.field_name) {
+                        Some(idx1) => match fields.iter().position(|f| f == field_name) {
+                            Some(idx2) => return row[idx1].starts_with(&row[idx2]),
                             None => {
                                 eprintln!("no field named {}", self.field_name);
                                 return false;
@@ -308,7 +308,7 @@ impl Comparison {
                 _ => todo!(),
             },
             ComparisonOps::EndsWith => match &self.rhs {
-                Value::Literal(val) => match fields.iter().position(|&f| *f == self.field_name) {
+                Value::Literal(val) => match fields.iter().position(|f| *f == self.field_name) {
                     Some(idx) => return row[idx].ends_with(val),
                     None => {
                         eprintln!("no field named {}", self.field_name);
@@ -316,9 +316,9 @@ impl Comparison {
                     }
                 },
                 Value::FieldName(field_name) => {
-                    match fields.iter().position(|&f| *f == self.field_name) {
-                        Some(idx1) => match fields.iter().position(|&f| *f == *field_name) {
-                            Some(idx2) => return row[idx1].ends_with(row[idx2]),
+                    match fields.iter().position(|f| *f == self.field_name) {
+                        Some(idx1) => match fields.iter().position(|f| f == field_name) {
+                            Some(idx2) => return row[idx1].ends_with(&row[idx2]),
                             None => {
                                 eprintln!("no field named {}", self.field_name);
                                 return false;
@@ -338,8 +338,8 @@ impl Comparison {
     fn greater_than_or_equal(
         &self,
         value: &Value,
-        fields: &Vec<&String>,
-        row: &Vec<&String>,
+        fields: &Vec<String>,
+        row: &Vec<String>,
     ) -> bool {
         match value {
             Value::FieldName(field) => match self.n_compaire_to_field(field, fields, row) {
@@ -359,7 +359,7 @@ impl Comparison {
             _ => todo!(),
         }
     }
-    fn less_than_or_equal(&self, value: &Value, fields: &Vec<&String>, row: &Vec<&String>) -> bool {
+    fn less_than_or_equal(&self, value: &Value, fields: &Vec<String>, row: &Vec<String>) -> bool {
         match value {
             Value::FieldName(field) => match self.n_compaire_to_field(field, fields, row) {
                 Some(order) => match order {
@@ -382,19 +382,19 @@ impl Comparison {
     fn n_compaire_to_field(
         &self,
         field: &String,
-        fields: &Vec<&String>,
-        row: &Vec<&String>,
+        fields: &Vec<String>,
+        row: &Vec<String>,
     ) -> Option<Ordering> {
-        let mut lhs_idx: usize;
-        let mut rhs_idx: usize;
-        match fields.iter().position(|&f| *f == self.field_name) {
+        let lhs_idx: usize;
+        let rhs_idx: usize;
+        match fields.iter().position(|f| *f == self.field_name) {
             Some(idx) => lhs_idx = idx,
             None => {
                 eprintln!("there is no field named {}", self.field_name);
                 return None;
             }
         }
-        match fields.iter().position(|&f| *f == *field) {
+        match fields.iter().position(|f| f == field) {
             Some(idx) => rhs_idx = idx,
             None => {
                 eprintln!("there is no field named {}", self.field_name);
@@ -402,8 +402,8 @@ impl Comparison {
             }
         }
 
-        let mut lhs: f32;
-        let mut rhs: f32;
+        let lhs: f32;
+        let rhs: f32;
         match row[lhs_idx].parse::<f32>() {
             Ok(val) => lhs = val,
             Err(_) => {
@@ -436,18 +436,18 @@ impl Comparison {
     fn compaire_to_number(
         &self,
         number: f32,
-        fields: &Vec<&String>,
-        row: &Vec<&String>,
+        fields: &Vec<String>,
+        row: &Vec<String>,
     ) -> Option<Ordering> {
-        let mut field_idx: usize;
-        match fields.iter().position(|&f| *f == self.field_name) {
+        let field_idx: usize;
+        match fields.iter().position(|f| *f == self.field_name) {
             Some(idx) => field_idx = idx,
             None => {
                 eprintln!("there is no field named {}", self.field_name);
                 return None;
             }
         }
-        let mut field_val: f32;
+        let field_val: f32;
         match row[field_idx].parse::<f32>() {
             Ok(val) => field_val = val,
             Err(_) => {
@@ -478,52 +478,42 @@ mod numbers_comparison_tests {
         (fields, row)
     }
 
-    fn prepare_inputs<'a>(
-        fields: &'a Vec<String>,
-        row: &'a Vec<String>,
-    ) -> (Vec<&'a String>, Vec<&'a String>) {
-        (fields.iter().collect(), row.iter().collect())
-    }
-
     // Field-to-value comparisons
     #[test]
     fn test_equal_operator_field_to_value() {
         let (fields, row) = get_test_data();
-        let (fields_ref, row_ref) = prepare_inputs(&fields, &row);
 
         let comparison = Comparison {
             field_name: "age".to_string(),
             comparison_op: ComparisonOps::Equal,
             rhs: Value::Number(45.0),
         };
-        assert!(comparison.evaluate(&fields_ref, &row_ref));
+        assert!(comparison.evaluate(&fields, &row));
     }
 
     // Field-to-field comparisons
     #[test]
     fn test_equal_operator_field_to_field() {
         let (fields, row) = get_test_data();
-        let (fields_ref, row_ref) = prepare_inputs(&fields, &row);
 
         let comparison = Comparison {
             field_name: "age".to_string(),
             comparison_op: ComparisonOps::Equal,
             rhs: Value::FieldName("age".to_string()),
         };
-        assert!(comparison.evaluate(&fields_ref, &row_ref));
+        assert!(comparison.evaluate(&fields, &row));
 
         let comparison = Comparison {
             field_name: "age".to_string(),
             comparison_op: ComparisonOps::Equal,
             rhs: Value::FieldName("points".to_string()),
         };
-        assert!(!comparison.evaluate(&fields_ref, &row_ref));
+        assert!(!comparison.evaluate(&fields, &row));
     }
 
     #[test]
     fn test_less_than_operator_field_to_field() {
         let (fields, row) = get_test_data();
-        let (fields_ref, row_ref) = prepare_inputs(&fields, &row);
 
         // age (45) < points (60)
         let comparison = Comparison {
@@ -531,7 +521,7 @@ mod numbers_comparison_tests {
             comparison_op: ComparisonOps::LessThan,
             rhs: Value::FieldName("points".to_string()),
         };
-        assert!(comparison.evaluate(&fields_ref, &row_ref));
+        assert!(comparison.evaluate(&fields, &row));
 
         // points (60) < age (45) should be false
         let comparison = Comparison {
@@ -539,13 +529,12 @@ mod numbers_comparison_tests {
             comparison_op: ComparisonOps::LessThan,
             rhs: Value::FieldName("age".to_string()),
         };
-        assert!(!comparison.evaluate(&fields_ref, &row_ref));
+        assert!(!comparison.evaluate(&fields, &row));
     }
 
     #[test]
     fn test_greater_than_operator_field_to_field() {
         let (fields, row) = get_test_data();
-        let (fields_ref, row_ref) = prepare_inputs(&fields, &row);
 
         // points (60) > age (45)
         let comparison = Comparison {
@@ -553,7 +542,7 @@ mod numbers_comparison_tests {
             comparison_op: ComparisonOps::GreaterThan,
             rhs: Value::FieldName("age".to_string()),
         };
-        assert!(comparison.evaluate(&fields_ref, &row_ref));
+        assert!(comparison.evaluate(&fields, &row));
 
         // age (45) > points (60) should be false
         let comparison = Comparison {
@@ -561,13 +550,12 @@ mod numbers_comparison_tests {
             comparison_op: ComparisonOps::GreaterThan,
             rhs: Value::FieldName("points".to_string()),
         };
-        assert!(!comparison.evaluate(&fields_ref, &row_ref));
+        assert!(!comparison.evaluate(&fields, &row));
     }
 
     #[test]
     fn test_between_operator_with_fields() {
         let (fields, row) = get_test_data();
-        let (fields_ref, row_ref) = prepare_inputs(&fields, &row);
 
         // Test age (45) between points (60) and literal 40
         let comparison = Comparison {
@@ -578,7 +566,7 @@ mod numbers_comparison_tests {
             ),
             rhs: Value::None,
         };
-        assert!(!comparison.evaluate(&fields_ref, &row_ref));
+        assert!(!comparison.evaluate(&fields, &row));
 
         // Test points (60) between age (45) and literal 70
         let comparison = Comparison {
@@ -589,13 +577,12 @@ mod numbers_comparison_tests {
             ),
             rhs: Value::None,
         };
-        assert!(comparison.evaluate(&fields_ref, &row_ref));
+        assert!(comparison.evaluate(&fields, &row));
     }
 
     #[test]
     fn test_mixed_comparisons() {
         let (fields, row) = get_test_data();
-        let (fields_ref, row_ref) = prepare_inputs(&fields, &row);
 
         // Test age (45) == points (60) - 15
         let comparison = Comparison {
@@ -604,13 +591,12 @@ mod numbers_comparison_tests {
             rhs: Value::Literal("($points - 15)".to_string()),
         };
         // This would require your evaluation to handle expressions
-        // assert!(comparison.evaluate(&fields_ref, &row_ref));
+        // assert!(comparison.evaluate(&fields, &row));
     }
 
     #[test]
     fn test_invalid_field_comparison() {
         let (fields, row) = get_test_data();
-        let (fields_ref, row_ref) = prepare_inputs(&fields, &row);
 
         // Compare with non-existent field
         let comparison = Comparison {
@@ -618,7 +604,7 @@ mod numbers_comparison_tests {
             comparison_op: ComparisonOps::Equal,
             rhs: Value::FieldName("nonexistent".to_string()),
         };
-        assert!(!comparison.evaluate(&fields_ref, &row_ref));
+        assert!(!comparison.evaluate(&fields, &row));
     }
 }
 #[cfg(test)]
@@ -639,17 +625,10 @@ mod string_comparison_tests {
         (fields, row)
     }
 
-    fn prepare_inputs<'a>(
-        fields: &'a Vec<String>,
-        row: &'a Vec<String>,
-    ) -> (Vec<&'a String>, Vec<&'a String>) {
-        (fields.iter().collect(), row.iter().collect())
-    }
 
     #[test]
     fn test_is_operator() {
         let (fields, row) = get_test_data();
-        let (fields_ref, row_ref) = prepare_inputs(&fields, &row);
 
         // Field to value comparison
         let comparison = Comparison {
@@ -657,7 +636,7 @@ mod string_comparison_tests {
             comparison_op: ComparisonOps::Is,
             rhs: Value::Literal("John Doe".to_string()),
         };
-        assert!(comparison.evaluate(&fields_ref, &row_ref));
+        assert!(comparison.evaluate(&fields, &row));
 
         // Field to field comparison (same value)
         let comparison = Comparison {
@@ -665,33 +644,31 @@ mod string_comparison_tests {
             comparison_op: ComparisonOps::Is,
             rhs: Value::FieldName("name".to_string()),
         };
-        assert!(comparison.evaluate(&fields_ref, &row_ref));
+        assert!(comparison.evaluate(&fields, &row));
     }
 
     #[test]
     fn test_is_not_operator() {
         let (fields, row) = get_test_data();
-        let (fields_ref, row_ref) = prepare_inputs(&fields, &row);
 
         let comparison = Comparison {
             field_name: "name".to_string(),
             comparison_op: ComparisonOps::IsNot,
             rhs: Value::Literal("Jane Doe".to_string()),
         };
-        assert!(comparison.evaluate(&fields_ref, &row_ref));
+        assert!(comparison.evaluate(&fields, &row));
 
         let comparison = Comparison {
             field_name: "name".to_string(),
             comparison_op: ComparisonOps::IsNot,
             rhs: Value::FieldName("department".to_string()),
         };
-        assert!(comparison.evaluate(&fields_ref, &row_ref));
+        assert!(comparison.evaluate(&fields, &row));
     }
 
     #[test]
     fn test_contains_operator() {
         let (fields, row) = get_test_data();
-        let (fields_ref, row_ref) = prepare_inputs(&fields, &row);
 
         // Field contains value
         let comparison = Comparison {
@@ -699,7 +676,7 @@ mod string_comparison_tests {
             comparison_op: ComparisonOps::Contains,
             rhs: Value::Literal("example".to_string()),
         };
-        assert!(comparison.evaluate(&fields_ref, &row_ref));
+        assert!(comparison.evaluate(&fields, &row));
 
         // Field contains another field's value
         let comparison = Comparison {
@@ -707,13 +684,12 @@ mod string_comparison_tests {
             comparison_op: ComparisonOps::Contains,
             rhs: Value::FieldName("name".to_string()),
         };
-        assert!(!comparison.evaluate(&fields_ref, &row_ref)); // "john.doe@..." does not contains "John Doe"
+        assert!(!comparison.evaluate(&fields, &row)); // "john.doe@..." does not contains "John Doe"
     }
 
     #[test]
     // fn test_in_operator() {
     //     let (fields, row) = get_test_data();
-    //     let (fields_ref, row_ref) = prepare_inputs(&fields, &row);
 
     //     // Value in list
     //     let comparison = Comparison {
@@ -727,7 +703,7 @@ mod string_comparison_tests {
     //             ]
     //         })
     //     };
-    //     assert!(comparison.evaluate(&fields_ref, &row_ref));
+    //     assert!(comparison.evaluate(&fields, &row));
 
     //     // Field value in other fields
     //     let comparison = Comparison {
@@ -740,52 +716,49 @@ mod string_comparison_tests {
     //             ]
     //         })
     //     };
-    //     assert!(comparison.evaluate(&fields_ref, &row_ref)); // "John Doe" in email
+    //     assert!(comparison.evaluate(&fields, &row)); // "John Doe" in email
     // }
     #[test]
     fn test_starts_with_operator() {
         let (fields, row) = get_test_data();
-        let (fields_ref, row_ref) = prepare_inputs(&fields, &row);
 
         let comparison = Comparison {
             field_name: "email".to_string(),
             comparison_op: ComparisonOps::StartsWith,
             rhs: Value::Literal("john".to_string()),
         };
-        assert!(comparison.evaluate(&fields_ref, &row_ref));
+        assert!(comparison.evaluate(&fields, &row));
 
         let comparison = Comparison {
             field_name: "email".to_string(),
             comparison_op: ComparisonOps::StartsWith,
             rhs: Value::FieldName("name".to_string()),
         };
-        assert!(!comparison.evaluate(&fields_ref, &row_ref)); // email doesn't start with full name
+        assert!(!comparison.evaluate(&fields, &row)); // email doesn't start with full name
     }
 
     #[test]
     fn test_ends_with_operator() {
         let (fields, row) = get_test_data();
-        let (fields_ref, row_ref) = prepare_inputs(&fields, &row);
 
         let comparison = Comparison {
             field_name: "email".to_string(),
             comparison_op: ComparisonOps::EndsWith,
             rhs: Value::Literal("example.com".to_string()),
         };
-        assert!(comparison.evaluate(&fields_ref, &row_ref));
+        assert!(comparison.evaluate(&fields, &row));
 
         let comparison = Comparison {
             field_name: "name".to_string(),
             comparison_op: ComparisonOps::EndsWith,
             rhs: Value::FieldName("department".to_string()),
         };
-        assert!(!comparison.evaluate(&fields_ref, &row_ref));
+        assert!(!comparison.evaluate(&fields, &row));
     }
 
     #[test]
     fn test_case_sensitivity() {
         let (fields, row) = get_test_data();
-        let (fields_ref, row_ref) = prepare_inputs(&fields, &row);
 
         // Case-sensitive comparison
         let comparison = Comparison {
@@ -793,7 +766,7 @@ mod string_comparison_tests {
             comparison_op: ComparisonOps::Is,
             rhs: Value::Literal("john doe".to_string()),
         };
-        assert!(!comparison.evaluate(&fields_ref, &row_ref));
+        assert!(!comparison.evaluate(&fields, &row));
 
         // Case-insensitive contains
         let comparison = Comparison {
@@ -801,9 +774,6 @@ mod string_comparison_tests {
             comparison_op: ComparisonOps::Contains,
             rhs: Value::Literal("EXAMPLE".to_string()),
         };
-        // Depending on your implementation:
-        // assert!(comparison.evaluate(&fields_ref, &row_ref)); // if case-insensitive
-        // or
-        assert!(!comparison.evaluate(&fields_ref, &row_ref)); // if case-sensitive
+        assert!(!comparison.evaluate(&fields, &row)); 
     }
 }
