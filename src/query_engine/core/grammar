@@ -10,9 +10,11 @@ Sort              = "sort" FieldName
 ReverseSort       = "rsort" FieldName
 Head              = "head" Number
 Tail              = "tail" Number
-SetQuery          = "set" Selector WhereClause? "to" Assignable
+SetQuery          = "set" WhereClause? "to" AssignList
+AssignList        = Assigning (Assigning)*
+Assigning         = FieldName "=" Assignable
 Selector          = "*" | FieldName
-Assignable        = GetQuery | Value | Modification
+Assignable        = Value | Modification
 Modification      = Value Modifier Value 
 WhereClause       = "where" Condition
 Condition         = OrCondition
