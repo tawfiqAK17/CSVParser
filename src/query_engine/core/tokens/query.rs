@@ -1,7 +1,6 @@
 use super::ParseResult;
 use super::get_query::GetQuery;
 use super::set_query::SetQuery;
-use indexmap::IndexMap;
 
 #[derive(Debug)]
 pub struct Query {

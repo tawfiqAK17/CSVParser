@@ -1,4 +1,3 @@
-use indexmap::IndexMap;
 use std::{env, io::stdin, process::exit};
 mod csv_parser;
 mod logger;

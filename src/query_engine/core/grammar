@@ -11,8 +11,8 @@ ReverseSort       = "rsort" FieldName
 Head              = "head" Number
 Tail              = "tail" Number
 SetQuery          = "set" WhereClause? "to" AssignList
-AssignList        = Assigning (Assigning)*
-Assigning         = FieldName "=" Assignable
+AssignList        = Assignment (Assignment)*
+Assignment         = FieldName "=" Assignable
 Selector          = "*" | FieldName
 Assignable        = Value | Modification
 Modification      = Value Modifier Value 

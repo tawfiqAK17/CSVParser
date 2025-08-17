@@ -2,7 +2,6 @@ use super::ParseResult;
 use super::function_call::FunctionCall;
 use super::value;
 use super::where_clause::WhereClause;
-use indexmap::IndexMap;
 
 #[derive(Debug)]
 pub struct GetQuery {
@@ -38,7 +37,7 @@ impl GetQuery {
                             return ParseResult::Err;
                         }
                     }
-                    let function_call_parse_result = FunctionCall::parse(lexemes, last_idx);
+                    let function_call_parse_result = FunctionCall::parse(lexemes, last_idx + 1);
                     match function_call_parse_result {
                         ParseResult::Val(function_call) => {
                             final_function_call = Some(function_call);
@@ -72,7 +71,7 @@ impl GetQuery {
                             return ParseResult::Err;
                         }
                     }
-                    let function_call_parse_result = FunctionCall::parse(lexemes, last_idx);
+                    let function_call_parse_result = FunctionCall::parse(lexemes, last_idx + 1);
                     match function_call_parse_result {
                         ParseResult::Val(function_call) => {
                             final_function_call = Some(function_call);
@@ -123,24 +122,20 @@ impl GetQuery {
         return Some((fields_names, start_idx));
     }
     pub fn evaluate(&self, fields: &Vec<String>, rows: &mut Vec<Vec<String>>) -> () {
-
         // will hold the rows that satisfies the condition
         let mut valid_rows: Vec<&Vec<String>> = Vec::new();
 
-        // this for loop will evaluate the where condition for every line
-        for i in 0..rows.len() {
-            if let Some(where_clause) = &self.where_clause {
+        if let Some(where_clause) = &self.where_clause {
+            // this for loop will evaluate the where condition for every line
+            for i in 0..rows.len() {
                 if where_clause.evaluate(fields, &rows[i]) {
                     valid_rows.push(&rows[i]);
-                } else {
-                    continue;
                 }
-            } else {
+            }
+        } else {
+            for i in 0..rows.len() {
                 valid_rows.push(&rows[i]);
             }
-        }
-        if let Some(function_call) = &self.function_call {
-            function_call.evaluate(fields, &mut valid_rows);
         }
         self.print_result(fields, &valid_rows);
         ()

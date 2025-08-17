@@ -13,6 +13,8 @@ pub mod value;
 pub mod where_clause;
 pub mod assignable;
 pub mod assign_list;
+pub mod assignment;
+pub mod modification;
 
 pub enum ParseResult<T> {
     Val(T),
