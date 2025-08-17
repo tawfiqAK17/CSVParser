@@ -1,3 +1,8 @@
+use std::num;
+
+use crate::query_engine::core::tokens::value;
+
+use super::ParseResult;
 use super::value::Value;
 
 #[derive(Debug)]
@@ -21,6 +26,25 @@ enum Modifier {
     StringModifier(StringModifier),
 }
 
+impl Modifier {
+    pub fn get_modifier_from_lexeme(lexeme: &String) -> Self {
+        match lexeme.as_str() {
+            // Arithmetic modifiers
+            "+" => Modifier::ArithmeticModifier(ArithmeticModifier::Plus),
+            "-" => Modifier::ArithmeticModifier(ArithmeticModifier::Minus),
+            "*" => Modifier::ArithmeticModifier(ArithmeticModifier::Multiply),
+            "/" => Modifier::ArithmeticModifier(ArithmeticModifier::Divide),
+            "%" => Modifier::ArithmeticModifier(ArithmeticModifier::Modulo),
+            "^" => Modifier::ArithmeticModifier(ArithmeticModifier::Power),
+
+            // String modifiers
+            "||" => Modifier::StringModifier(StringModifier::Concatenate),
+            "to-upper" => Modifier::StringModifier(StringModifier::ToUpperCase),
+            "to-lower" => Modifier::StringModifier(StringModifier::ToLowerCase),
+            _ => unreachable!("invalid modifier {lexeme}"),
+        }
+    }
+}
 #[derive(Debug)]
 pub struct Modification {
     lhs: Value,
@@ -29,6 +53,82 @@ pub struct Modification {
 }
 
 impl Modification {
+    pub fn parse(lexemes: &[&String], idx: usize) -> (ParseResult<Self>, usize) {
+        match lexemes.get(idx) {
+            Some(lexeme1) => {
+                let lhs: Value;
+                let modifier: Modifier;
+                let rhs: Option<Value>;
+                if let Some(field_name) = value::parse_field_name(lexeme1) {
+                    lhs = Value::FieldName(field_name);
+                } else if let Some(number) = value::parse_number(lexeme1) {
+                    lhs = Value::Number(number);
+                } else if let Some(literal) = value::parse_literal(lexeme1) {
+                    lhs = Value::Literal(literal);
+                } else {
+                    return {
+                        eprintln!("{lexeme1} is not a valid value to be modified");
+                        return (ParseResult::Err, idx);
+                    };
+                }
+                match lexemes.get(idx + 1) {
+                    Some(lexeme2) => match lexeme2.as_str() {
+                        "+" | "-" | "*" | "/" | "%" | "||" => {
+                            modifier = Modifier::get_modifier_from_lexeme(lexeme2);
+                            match lexemes.get(idx + 2) {
+                                Some(lexeme3) => {
+                                    if let Some(field_name) = value::parse_field_name(lexeme3) {
+                                        rhs = Some(Value::FieldName(field_name));
+                                    } else if let Some(number) = value::parse_number(lexeme3) {
+                                        rhs = Some(Value::Number(number));
+                                    } else if let Some(literal) = value::parse_literal(lexeme3) {
+                                        rhs = Some(Value::Literal(literal));
+                                    } else {
+                                        eprintln!("{lexeme3} is not a valid value to be modified");
+                                        return (ParseResult::Err, idx);
+                                    }
+                                    return (
+                                        ParseResult::Val(Modification {
+                                            lhs,
+                                            modifier,
+                                            rhs,
+                                        }),
+                                        idx + 2,
+                                    );
+                                }
+                                None => {
+                                    eprintln!(
+                                        "the modifier {lexeme2} require a right hand side value"
+                                    );
+                                    return (ParseResult::Err, idx);
+                                }
+                            }
+                        }
+                        "to-lower" | "to-upper" => {
+                            modifier = Modifier::get_modifier_from_lexeme(lexeme2);
+                            return (
+                                ParseResult::Val(Modification {
+                                    lhs,
+                                    modifier,
+                                    rhs: None,
+                                }),
+                                idx + 1,
+                            );
+                        }
+                        _ => {
+                            eprintln!("there is no modifier named {lexeme2}");
+                            return (ParseResult::Err, idx);
+                        }
+                    },
+                    None => {
+                        eprintln!("expecting a modifier after the value {}", lexeme1);
+                        return (ParseResult::Err, idx);
+                    }
+                }
+            }
+            None => return (ParseResult::None, idx),
+        }
+    }
     pub fn evaluate(&self, fields: &Vec<String>, row: &Vec<String>) -> Option<String> {
         match &self.modifier {
             Modifier::ArithmeticModifier(arithmitec_modifier) => {
@@ -42,7 +142,7 @@ impl Modification {
                                 Ok(val) => lhs = val,
                                 Err(_) => {
                                     eprintln!(
-                                        "the value {} of {} is not numerical",
+                                        "the value {} of the field {} is not numerical",
                                         row[idx], field_name
                                     );
                                     return None;
@@ -153,7 +253,10 @@ impl Modification {
                     None => match string_modifier {
                         StringModifier::ToUpperCase => return Some(lhs.to_uppercase()),
                         StringModifier::ToLowerCase => return Some(lhs.to_lowercase()),
-                        _ => {}
+                        _ => {
+                            eprintln!("messing the rhs for the modifier");
+                            return None;
+                        }
                     },
                 }
             }
@@ -235,7 +338,10 @@ mod modification_tests {
             modifier: Modifier::ArithmeticModifier(ArithmeticModifier::Power),
             rhs: Some(Value::Number(2.0)),
         };
-        assert_eq!(modification.evaluate(&fields, &row), Some("2025".to_string()));
+        assert_eq!(
+            modification.evaluate(&fields, &row),
+            Some("2025".to_string())
+        );
     }
 
     #[test]
@@ -246,7 +352,10 @@ mod modification_tests {
             modifier: Modifier::StringModifier(StringModifier::Concatenate),
             rhs: Some(Value::Literal(" Smith".to_string())),
         };
-        assert_eq!(modification.evaluate(&fields, &row), Some("bob Smith".to_string()));
+        assert_eq!(
+            modification.evaluate(&fields, &row),
+            Some("bob Smith".to_string())
+        );
     }
 
     #[test]
@@ -257,26 +366,32 @@ mod modification_tests {
             modifier: Modifier::StringModifier(StringModifier::ToUpperCase),
             rhs: None,
         };
-        assert_eq!(modification.evaluate(&fields, &row), Some("LONDON".to_string()));
+        assert_eq!(
+            modification.evaluate(&fields, &row),
+            Some("LONDON".to_string())
+        );
     }
 
     #[test]
     fn string_to_lower_case() {
         let (fields, mut row) = get_data();
         row[2] = "LONDON".to_string(); // Override city to be uppercase
-        
+
         let modification = Modification {
             lhs: Value::FieldName("city".to_string()),
             modifier: Modifier::StringModifier(StringModifier::ToLowerCase),
             rhs: None,
         };
-        assert_eq!(modification.evaluate(&fields, &row), Some("london".to_string()));
+        assert_eq!(
+            modification.evaluate(&fields, &row),
+            Some("london".to_string())
+        );
     }
 
     #[test]
     fn invalid_operations() {
         let (fields, row) = get_data();
-        
+
         // Arithmetic operation on string field
         let modification = Modification {
             lhs: Value::FieldName("name".to_string()),
@@ -284,7 +399,7 @@ mod modification_tests {
             rhs: Some(Value::Number(5.0)),
         };
         assert_eq!(modification.evaluate(&fields, &row), None);
-        
+
         // Missing rhs for concatenation
         let modification = Modification {
             lhs: Value::FieldName("name".to_string()),

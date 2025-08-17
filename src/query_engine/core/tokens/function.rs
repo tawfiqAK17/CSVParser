@@ -67,7 +67,7 @@ impl Function {
                                 return (ParseResult::Err, idx);
                             }
                             _ => {
-                                eprintln!("there is no function named {}", lexeme);
+                                eprintln!("no function named {}", lexeme);
                                 return (ParseResult::Err, idx);
                             }
                         },
@@ -97,7 +97,7 @@ impl Function {
                                     return (ParseResult::Err, idx);
                                 }
                                 _ => {
-                                    eprintln!("there is no function named {}", lexeme);
+                                    eprintln!("no function named {}", lexeme);
                                     return (ParseResult::Err, idx);
                                 }
                             },

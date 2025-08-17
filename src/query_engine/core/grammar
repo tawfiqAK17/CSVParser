@@ -15,7 +15,7 @@ AssignList        = Assignment (Assignment)*
 Assignment         = FieldName "=" Assignable
 Selector          = "*" | FieldName
 Assignable        = Value | Modification
-Modification      = Value Modifier Value 
+Modification      = Value Modifier Value? 
 WhereClause       = "where" Condition
 Condition         = OrCondition
 OrCondition       = AndCondition ("or" AndCondition)*
@@ -29,7 +29,7 @@ NumericalOp       = "==" | "!=" | ">" | "<" | ">=" | "<=" | BetweenOp
 BetweenOp         = "between" (Number | FieldName) "and" (Number | FieldName)
 StringOp          = "is" | "contains" | "starts-with" | "ends-with"
 PrimitiveValue    = Literal | Number | Boolean | List
-Modifier          = "+" | "-" | "*" | "/"
+Modifier          = "+" | "-" | "*" | "/" | "%" | "concat" | "to-lower" | "to-upper"
 Literal           = '"' [^"]* '"' | "'" [^']* "'"
 Number            = Float
 Boolean           = "true" | "false"

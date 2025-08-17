@@ -17,7 +17,17 @@ impl Query {
                     set_query: None,
                 });
             }
-            ParseResult::None => eprintln!("the only query implemented until now is get"),
+            ParseResult::None => {},
+            ParseResult::Err => return None,
+        }
+        match SetQuery::parse(lexemes) {
+            ParseResult::Val(set_query) => {
+                return Some(Query {
+                    get_query: None,
+                    set_query: Some(set_query),
+                });
+            }
+            ParseResult::None => {},
             ParseResult::Err => return None,
         }
         None

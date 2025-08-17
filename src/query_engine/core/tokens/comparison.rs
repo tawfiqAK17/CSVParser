@@ -390,14 +390,14 @@ impl Comparison {
         match fields.iter().position(|f| *f == self.field_name) {
             Some(idx) => lhs_idx = idx,
             None => {
-                eprintln!("there is no field named {}", self.field_name);
+                eprintln!("no field named {}", self.field_name);
                 return None;
             }
         }
         match fields.iter().position(|f| f == field) {
             Some(idx) => rhs_idx = idx,
             None => {
-                eprintln!("there is no field named {}", self.field_name);
+                eprintln!("no field named {}", self.field_name);
                 return None;
             }
         }
@@ -443,7 +443,7 @@ impl Comparison {
         match fields.iter().position(|f| *f == self.field_name) {
             Some(idx) => field_idx = idx,
             None => {
-                eprintln!("there is no field named {}", self.field_name);
+                eprintln!("no field named {}", self.field_name);
                 return None;
             }
         }
