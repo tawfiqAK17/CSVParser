@@ -12,9 +12,8 @@ Head              = "head" Number
 Tail              = "tail" Number
 SetQuery          = "set" WhereClause? "to" AssignList
 AssignList        = Assignment (Assignment)*
-Assignment         = FieldName "=" Assignable
+Assignment        = FieldName "=" Modification 
 Selector          = "*" | FieldName
-Assignable        = Value | Modification
 Modification      = Value Modifier? Value? 
 WhereClause       = "where" Condition
 Condition         = OrCondition

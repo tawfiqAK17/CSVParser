@@ -273,9 +273,9 @@ impl Modification {
                 Value::FieldName(val) => match fields.iter().position(|f| f == val) {
                     Some(idx) => return Some(row[idx].clone()),
                     None => {
-                      eprintln!("no field named {}", val);
-                      return None;
-                    },
+                        eprintln!("no field named {}", val);
+                        return None;
+                    }
                 },
                 Value::Literal(val) => return Some(val.clone()),
                 Value::Number(val) => return Some(val.to_string()),
