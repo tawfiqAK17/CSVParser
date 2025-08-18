@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 #[derive(Debug)]
 pub enum Value {
     Literal(String),
@@ -6,6 +8,19 @@ pub enum Value {
     Boolean(bool),
     List(List),
     None,
+}
+
+impl Display for Value {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Value::Literal(val) => write!(f, "{val}"),
+            Value::FieldName(val) => write!(f, "{val}"),
+            Value::Number(val) => write!(f, "{val}"),
+            Value::Boolean(val) => write!(f, "{val}"),
+            Value::List(_) => write!(f, "list"),
+            Value::None => write!(f, ""),
+        }
+    }
 }
 
 #[derive(Debug)]

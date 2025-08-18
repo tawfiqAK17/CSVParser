@@ -1,8 +1,5 @@
-use std::num;
-
-use crate::query_engine::core::tokens::value;
-
 use super::ParseResult;
+use super::value;
 use super::value::Value;
 
 #[derive(Debug)]
@@ -48,7 +45,7 @@ impl Modifier {
 #[derive(Debug)]
 pub struct Modification {
     lhs: Value,
-    modifier: Modifier,
+    modifier: Option<Modifier>,
     rhs: Option<Value>,
 }
 
@@ -57,7 +54,7 @@ impl Modification {
         match lexemes.get(idx) {
             Some(lexeme1) => {
                 let lhs: Value;
-                let modifier: Modifier;
+                let modifier: Option<Modifier>;
                 let rhs: Option<Value>;
                 if let Some(field_name) = value::parse_field_name(lexeme1) {
                     lhs = Value::FieldName(field_name);
@@ -73,8 +70,8 @@ impl Modification {
                 }
                 match lexemes.get(idx + 1) {
                     Some(lexeme2) => match lexeme2.as_str() {
-                        "+" | "-" | "*" | "/" | "%" | "||" => {
-                            modifier = Modifier::get_modifier_from_lexeme(lexeme2);
+                        "+" | "-" | "*" | "/" | "%" | "^" | "||" => {
+                            modifier = Some(Modifier::get_modifier_from_lexeme(lexeme2));
                             match lexemes.get(idx + 2) {
                                 Some(lexeme3) => {
                                     if let Some(field_name) = value::parse_field_name(lexeme3) {
@@ -88,11 +85,7 @@ impl Modification {
                                         return (ParseResult::Err, idx);
                                     }
                                     return (
-                                        ParseResult::Val(Modification {
-                                            lhs,
-                                            modifier,
-                                            rhs,
-                                        }),
+                                        ParseResult::Val(Modification { lhs, modifier, rhs }),
                                         idx + 2,
                                     );
                                 }
@@ -105,7 +98,7 @@ impl Modification {
                             }
                         }
                         "to-lower" | "to-upper" => {
-                            modifier = Modifier::get_modifier_from_lexeme(lexeme2);
+                            modifier = Some(Modifier::get_modifier_from_lexeme(lexeme2));
                             return (
                                 ParseResult::Val(Modification {
                                     lhs,
@@ -116,13 +109,25 @@ impl Modification {
                             );
                         }
                         _ => {
-                            eprintln!("there is no modifier named {lexeme2}");
-                            return (ParseResult::Err, idx);
+                            return (
+                                ParseResult::Val(Modification {
+                                    lhs,
+                                    modifier: None,
+                                    rhs: None,
+                                }),
+                                idx,
+                            );
                         }
                     },
                     None => {
-                        eprintln!("expecting a modifier after the value {}", lexeme1);
-                        return (ParseResult::Err, idx);
+                        return (
+                            ParseResult::Val(Modification {
+                                lhs,
+                                modifier: None,
+                                rhs: None,
+                            }),
+                            idx,
+                        );
                     }
                 }
             }
@@ -131,46 +136,19 @@ impl Modification {
     }
     pub fn evaluate(&self, fields: &Vec<String>, row: &Vec<String>) -> Option<String> {
         match &self.modifier {
-            Modifier::ArithmeticModifier(arithmitec_modifier) => {
-                let lhs: f32;
-                let rhs: f32;
-                match &self.lhs {
-                    Value::Number(number) => lhs = *number,
-                    Value::FieldName(field_name) => {
-                        match fields.iter().position(|f| f == field_name) {
-                            Some(idx) => match row[idx].parse::<f32>() {
-                                Ok(val) => lhs = val,
-                                Err(_) => {
-                                    eprintln!(
-                                        "the value {} of the field {} is not numerical",
-                                        row[idx], field_name
-                                    );
-                                    return None;
-                                }
-                            },
-                            None => {
-                                eprintln!("no field named {}", field_name);
-                                return None;
-                            }
-                        }
-                    }
-                    _ => {
-                        eprintln!(
-                            "an arithmetic operator can not be applied to a non numeric value"
-                        );
-                        return None;
-                    }
-                }
-                match &self.rhs {
-                    Some(rhs_val) => match rhs_val {
-                        Value::Number(number) => rhs = *number,
+            Some(modifier) => match modifier {
+                Modifier::ArithmeticModifier(arithmitec_modifier) => {
+                    let lhs: f32;
+                    let rhs: f32;
+                    match &self.lhs {
+                        Value::Number(number) => lhs = *number,
                         Value::FieldName(field_name) => {
                             match fields.iter().position(|f| f == field_name) {
                                 Some(idx) => match row[idx].parse::<f32>() {
-                                    Ok(val) => rhs = val,
+                                    Ok(val) => lhs = val,
                                     Err(_) => {
                                         eprintln!(
-                                            "the value {} of {} is not numerical",
+                                            "the value {} of the field {} is not numerical",
                                             row[idx], field_name
                                         );
                                         return None;
@@ -188,46 +166,57 @@ impl Modification {
                             );
                             return None;
                         }
-                    },
-                    None => {
-                        eprintln!("expecting a rhs value after the arithmetic operator");
-                        return None;
                     }
-                }
-                match arithmitec_modifier {
-                    ArithmeticModifier::Plus => return Some((lhs + rhs).to_string()),
-                    ArithmeticModifier::Minus => return Some((lhs - rhs).to_string()),
-                    ArithmeticModifier::Multiply => return Some((lhs * rhs).to_string()),
-                    ArithmeticModifier::Divide => return Some((lhs / rhs).to_string()),
-                    ArithmeticModifier::Modulo => return Some((lhs % rhs).to_string()),
-                    ArithmeticModifier::Power => return Some((lhs.powf(rhs)).to_string()),
-                }
-            }
-            Modifier::StringModifier(string_modifier) => {
-                let lhs: String;
-                let rhs: Option<String>;
-                match &self.lhs {
-                    Value::Literal(val) => lhs = val.clone(),
-                    Value::FieldName(field_name) => {
-                        match fields.iter().position(|f| f == field_name) {
-                            Some(idx) => lhs = row[idx].clone(),
-                            None => {
-                                eprintln!("no field named {}", field_name);
+                    match &self.rhs {
+                        Some(rhs_val) => match rhs_val {
+                            Value::Number(number) => rhs = *number,
+                            Value::FieldName(field_name) => {
+                                match fields.iter().position(|f| f == field_name) {
+                                    Some(idx) => match row[idx].parse::<f32>() {
+                                        Ok(val) => rhs = val,
+                                        Err(_) => {
+                                            eprintln!(
+                                                "the value {} of {} is not numerical",
+                                                row[idx], field_name
+                                            );
+                                            return None;
+                                        }
+                                    },
+                                    None => {
+                                        eprintln!("no field named {}", field_name);
+                                        return None;
+                                    }
+                                }
+                            }
+                            _ => {
+                                eprintln!(
+                                    "an arithmetic operator can not be applied to a non numeric value"
+                                );
                                 return None;
                             }
+                        },
+                        None => {
+                            eprintln!("expecting a rhs value after the arithmetic operator");
+                            return None;
                         }
                     }
-                    _ => {
-                        eprintln!("a string operator can not be applied to a non numeric value");
-                        return None;
+                    match arithmitec_modifier {
+                        ArithmeticModifier::Plus => return Some((lhs + rhs).to_string()),
+                        ArithmeticModifier::Minus => return Some((lhs - rhs).to_string()),
+                        ArithmeticModifier::Multiply => return Some((lhs * rhs).to_string()),
+                        ArithmeticModifier::Divide => return Some((lhs / rhs).to_string()),
+                        ArithmeticModifier::Modulo => return Some((lhs % rhs).to_string()),
+                        ArithmeticModifier::Power => return Some((lhs.powf(rhs)).to_string()),
                     }
                 }
-                match &self.rhs {
-                    Some(rhs_val) => match rhs_val {
-                        Value::Literal(val) => rhs = Some(val.clone()),
+                Modifier::StringModifier(string_modifier) => {
+                    let lhs: String;
+                    let rhs: Option<String>;
+                    match &self.lhs {
+                        Value::Literal(val) => lhs = val.clone(),
                         Value::FieldName(field_name) => {
                             match fields.iter().position(|f| f == field_name) {
-                                Some(idx) => rhs = Some(row[idx].clone()),
+                                Some(idx) => lhs = row[idx].clone(),
                                 None => {
                                     eprintln!("no field named {}", field_name);
                                     return None;
@@ -240,26 +229,61 @@ impl Modification {
                             );
                             return None;
                         }
-                    },
-                    None => {
-                        rhs = None;
+                    }
+                    match &self.rhs {
+                        Some(rhs_val) => match rhs_val {
+                            Value::Literal(val) => rhs = Some(val.clone()),
+                            Value::FieldName(field_name) => {
+                                match fields.iter().position(|f| f == field_name) {
+                                    Some(idx) => rhs = Some(row[idx].clone()),
+                                    None => {
+                                        eprintln!("no field named {}", field_name);
+                                        return None;
+                                    }
+                                }
+                            }
+                            _ => {
+                                eprintln!(
+                                    "a string operator can not be applied to a non numeric value"
+                                );
+                                return None;
+                            }
+                        },
+                        None => {
+                            rhs = None;
+                        }
+                    }
+                    match rhs {
+                        Some(val) => match string_modifier {
+                            StringModifier::Concatenate => return Some(lhs + &val),
+                            _ => {}
+                        },
+                        None => match string_modifier {
+                            StringModifier::ToUpperCase => return Some(lhs.to_uppercase()),
+                            StringModifier::ToLowerCase => return Some(lhs.to_lowercase()),
+                            _ => {
+                                eprintln!("messing the rhs for the modifier");
+                                return None;
+                            }
+                        },
                     }
                 }
-                match rhs {
-                    Some(val) => match string_modifier {
-                        StringModifier::Concatenate => return Some(lhs + &val),
-                        _ => {}
+            },
+            None => match &self.lhs {
+                Value::FieldName(val) => match fields.iter().position(|f| f == val) {
+                    Some(idx) => return Some(row[idx].clone()),
+                    None => {
+                      eprintln!("no field named {}", val);
+                      return None;
                     },
-                    None => match string_modifier {
-                        StringModifier::ToUpperCase => return Some(lhs.to_uppercase()),
-                        StringModifier::ToLowerCase => return Some(lhs.to_lowercase()),
-                        _ => {
-                            eprintln!("messing the rhs for the modifier");
-                            return None;
-                        }
-                    },
+                },
+                Value::Literal(val) => return Some(val.clone()),
+                Value::Number(val) => return Some(val.to_string()),
+                _ => {
+                    eprintln!("the value {} can not be assigned to a field", self.lhs);
+                    return None;
                 }
-            }
+            },
         }
         None
     }
@@ -280,7 +304,7 @@ mod modification_tests {
         let (fields, row) = get_data();
         let modification = Modification {
             lhs: Value::FieldName("age".to_string()),
-            modifier: Modifier::ArithmeticModifier(ArithmeticModifier::Plus),
+            modifier: Some(Modifier::ArithmeticModifier(ArithmeticModifier::Plus)),
             rhs: Some(Value::Number(5.0)),
         };
         assert_eq!(modification.evaluate(&fields, &row), Some("50".to_string()));
@@ -291,7 +315,7 @@ mod modification_tests {
         let (fields, row) = get_data();
         let modification = Modification {
             lhs: Value::FieldName("age".to_string()),
-            modifier: Modifier::ArithmeticModifier(ArithmeticModifier::Minus),
+            modifier: Some(Modifier::ArithmeticModifier(ArithmeticModifier::Minus)),
             rhs: Some(Value::Number(5.0)),
         };
         assert_eq!(modification.evaluate(&fields, &row), Some("40".to_string()));
@@ -302,7 +326,7 @@ mod modification_tests {
         let (fields, row) = get_data();
         let modification = Modification {
             lhs: Value::FieldName("age".to_string()),
-            modifier: Modifier::ArithmeticModifier(ArithmeticModifier::Multiply),
+            modifier: Some(Modifier::ArithmeticModifier(ArithmeticModifier::Multiply)),
             rhs: Some(Value::Number(2.0)),
         };
         assert_eq!(modification.evaluate(&fields, &row), Some("90".to_string()));
@@ -313,7 +337,7 @@ mod modification_tests {
         let (fields, row) = get_data();
         let modification = Modification {
             lhs: Value::FieldName("age".to_string()),
-            modifier: Modifier::ArithmeticModifier(ArithmeticModifier::Divide),
+            modifier: Some(Modifier::ArithmeticModifier(ArithmeticModifier::Divide)),
             rhs: Some(Value::Number(5.0)),
         };
         assert_eq!(modification.evaluate(&fields, &row), Some("9".to_string()));
@@ -324,7 +348,7 @@ mod modification_tests {
         let (fields, row) = get_data();
         let modification = Modification {
             lhs: Value::FieldName("age".to_string()),
-            modifier: Modifier::ArithmeticModifier(ArithmeticModifier::Modulo),
+            modifier: Some(Modifier::ArithmeticModifier(ArithmeticModifier::Modulo)),
             rhs: Some(Value::Number(7.0)),
         };
         assert_eq!(modification.evaluate(&fields, &row), Some("3".to_string()));
@@ -335,7 +359,7 @@ mod modification_tests {
         let (fields, row) = get_data();
         let modification = Modification {
             lhs: Value::FieldName("age".to_string()),
-            modifier: Modifier::ArithmeticModifier(ArithmeticModifier::Power),
+            modifier: Some(Modifier::ArithmeticModifier(ArithmeticModifier::Power)),
             rhs: Some(Value::Number(2.0)),
         };
         assert_eq!(
@@ -349,7 +373,7 @@ mod modification_tests {
         let (fields, row) = get_data();
         let modification = Modification {
             lhs: Value::FieldName("name".to_string()),
-            modifier: Modifier::StringModifier(StringModifier::Concatenate),
+            modifier: Some(Modifier::StringModifier(StringModifier::Concatenate)),
             rhs: Some(Value::Literal(" Smith".to_string())),
         };
         assert_eq!(
@@ -363,7 +387,7 @@ mod modification_tests {
         let (fields, row) = get_data();
         let modification = Modification {
             lhs: Value::FieldName("city".to_string()),
-            modifier: Modifier::StringModifier(StringModifier::ToUpperCase),
+            modifier: Some(Modifier::StringModifier(StringModifier::ToUpperCase)),
             rhs: None,
         };
         assert_eq!(
@@ -379,7 +403,7 @@ mod modification_tests {
 
         let modification = Modification {
             lhs: Value::FieldName("city".to_string()),
-            modifier: Modifier::StringModifier(StringModifier::ToLowerCase),
+            modifier: Some(Modifier::StringModifier(StringModifier::ToLowerCase)),
             rhs: None,
         };
         assert_eq!(
@@ -395,7 +419,7 @@ mod modification_tests {
         // Arithmetic operation on string field
         let modification = Modification {
             lhs: Value::FieldName("name".to_string()),
-            modifier: Modifier::ArithmeticModifier(ArithmeticModifier::Plus),
+            modifier: Some(Modifier::ArithmeticModifier(ArithmeticModifier::Plus)),
             rhs: Some(Value::Number(5.0)),
         };
         assert_eq!(modification.evaluate(&fields, &row), None);
@@ -403,7 +427,7 @@ mod modification_tests {
         // Missing rhs for concatenation
         let modification = Modification {
             lhs: Value::FieldName("name".to_string()),
-            modifier: Modifier::StringModifier(StringModifier::Concatenate),
+            modifier: Some(Modifier::StringModifier(StringModifier::Concatenate)),
             rhs: None,
         };
         assert_eq!(modification.evaluate(&fields, &row), None);
