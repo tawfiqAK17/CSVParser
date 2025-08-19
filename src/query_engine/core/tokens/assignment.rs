@@ -9,7 +9,7 @@ pub struct Assignment {
 }
 
 impl Assignment {
-    pub fn parse(lexemes: &[&String], idx: usize) -> (ParseResult<Self>, usize) {
+    pub fn parse(lexemes: &[String], idx: usize) -> (ParseResult<Self>, usize) {
         match lexemes.get(idx) {
             Some(lexeme1) => {
                 if let Some(field_name) = value::parse_field_name(lexeme1) {
@@ -52,7 +52,6 @@ impl Assignment {
             }
             None => return (ParseResult::None, idx),
         }
-        (ParseResult::None, idx)
     }
     pub fn evaluate(&self, fields: &Vec<String>, row: &mut Vec<String>) {
         match fields.iter().position(|f| *f == self.field_name) {

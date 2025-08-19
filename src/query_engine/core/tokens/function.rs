@@ -14,19 +14,30 @@ pub enum Functions {
     Tail(usize),
 }
 
+impl Functions {
+    pub fn get_available_functions_names<'a>() -> Vec<&'a str> {
+      return vec!["sort", "rsort", "nsort", "nrsort", "head", "tail"];
+    }
+}
 #[derive(Debug)]
 pub struct Function {
     function_name: Functions,
 }
 
 impl Function {
-    pub fn parse(lexemes: &[&String], mut idx: usize) -> (ParseResult<Self>, usize) {
+    pub fn parse(lexemes: &[String], mut idx: usize) -> (ParseResult<Self>, usize) {
         match lexemes.get(idx) {
             Some(lexeme) => {
+              if !Functions::get_available_functions_names().contains(&lexeme.as_str()) {
+                eprintln!("no function named {}", lexeme);
+                return (ParseResult::Err, idx);
+              }
                 idx += 1;
                 match lexemes.get(idx) {
                     Some(param) => match value::parse_field_name(param) {
                         Some(field_name) => match lexeme.as_str() {
+                          // if the parameter is a field name than the function can be one of the
+                          // next match cases
                             "sort" => {
                                 return (
                                     ParseResult::Val(Function {
@@ -60,6 +71,7 @@ impl Function {
                                 );
                             }
                             "head" | "tail" => {
+                              // these functions does not accept a field name as a parameter
                                 eprintln!(
                                     "the function {} expect a parameter of type number",
                                     lexeme
@@ -102,6 +114,7 @@ impl Function {
                                 }
                             },
                             None => {
+                              // the parameter is neither a field name or a number
                                 eprintln!(
                                     "the parameters of function can only be a field name or a number"
                                 );
@@ -110,6 +123,7 @@ impl Function {
                         },
                     },
                     None => {
+                        // the function exist but no parameter was given
                         eprintln!("expecting a parameter for the function {}", lexeme);
                         return (ParseResult::Err, idx);
                     }

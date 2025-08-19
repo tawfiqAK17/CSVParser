@@ -49,14 +49,17 @@ pub struct Comparison {
 }
 
 impl Comparison {
-    pub fn parse(lexemes: &[&String], mut idx: usize) -> (ParseResult<Self>, usize) {
+    pub fn parse(lexemes: &[String], mut idx: usize) -> (ParseResult<Self>, usize) {
         if let Some(lexeme) = lexemes.get(idx) {
+          // the first value must be a field name
             if let Some(field_name) = value::parse_field_name(lexeme) {
                 idx += 1;
-
+                
                 if let Some(lexeme) = lexemes.get(idx) {
-                    let mut comparison_op: ComparisonOps;
-                    let mut rhs: Value;
+                    let comparison_op: ComparisonOps;
+                    let rhs: Value;
+
+                    // the second lexeme must be a comparison operator
                     match &lexeme[..] {
                         "==" => comparison_op = ComparisonOps::Equal,
                         ">=" => comparison_op = ComparisonOps::GreaterThanOrEqual,
@@ -76,6 +79,8 @@ impl Comparison {
                     }
                     idx += 1;
                     if let Some(lexeme) = lexemes.get(idx) {
+                        // the third lexeme is the rhs witch can be a literal a field name or a
+                        // number
                         if let Some(literal) = value::parse_literal(lexeme) {
                             rhs = Value::Literal(literal);
                         } else if let Some(field_name) = value::parse_field_name(lexeme) {
@@ -224,7 +229,10 @@ impl Comparison {
                     }
                 }
 
-                _ => todo!(),
+                _ => {
+                  eprintln!("the value {} can not be compared to the value at field '{}'",self.rhs, self.field_name);
+                  return false;
+                },
             },
             ComparisonOps::IsNot => match &self.rhs {
                 Value::Literal(val) => match fields.iter().position(|f| *f == self.field_name) {
@@ -252,7 +260,10 @@ impl Comparison {
                     }
                 }
 
-                _ => todo!(),
+                _ => {
+                  eprintln!("the value {} can not be compared to the value at field '{}'",self.rhs, self.field_name);
+                  return false;
+                },
             },
 
             ComparisonOps::Contains => match &self.rhs {
@@ -279,8 +290,9 @@ impl Comparison {
                     }
                 }
                 _ => {
-                    return false;
-                }
+                  eprintln!("the value {} can not be compared to the value at field '{}'",self.rhs, self.field_name);
+                  return false;
+                },
             },
             ComparisonOps::StartsWith => match &self.rhs {
                 Value::Literal(val) => match fields.iter().position(|f| *f == self.field_name) {
@@ -305,7 +317,10 @@ impl Comparison {
                         }
                     }
                 }
-                _ => todo!(),
+                _ => {
+                  eprintln!("the value {} can not be compared to the value at field '{}'",self.rhs, self.field_name);
+                  return false;
+                },
             },
             ComparisonOps::EndsWith => match &self.rhs {
                 Value::Literal(val) => match fields.iter().position(|f| *f == self.field_name) {
@@ -330,7 +345,10 @@ impl Comparison {
                         }
                     }
                 }
-                _ => todo!(),
+                _ => {
+                  eprintln!("the value {} can not be compared to the value at field '{}'",self.rhs, self.field_name);
+                  return false;
+                },
             },
             ComparisonOps::In => todo!(),
         }
@@ -625,7 +643,6 @@ mod string_comparison_tests {
         (fields, row)
     }
 
-
     #[test]
     fn test_is_operator() {
         let (fields, row) = get_test_data();
@@ -774,6 +791,6 @@ mod string_comparison_tests {
             comparison_op: ComparisonOps::Contains,
             rhs: Value::Literal("EXAMPLE".to_string()),
         };
-        assert!(!comparison.evaluate(&fields, &row)); 
+        assert!(!comparison.evaluate(&fields, &row));
     }
 }

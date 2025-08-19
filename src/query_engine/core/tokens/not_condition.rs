@@ -8,7 +8,7 @@ pub struct NotCondition {
 }
 
 impl NotCondition {
-    pub fn parse(lexemes: &[&String], mut idx: usize) -> (ParseResult<Self>, usize) {
+    pub fn parse(lexemes: &[String], mut idx: usize) -> (ParseResult<Self>, usize) {
         let mut not: Option<()> = None;
         if let Some(lexeme) = lexemes.get(idx) {
             if *lexeme == "not" {

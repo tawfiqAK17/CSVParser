@@ -1,5 +1,5 @@
-use super::not_condition::NotCondition;
 use super::ParseResult;
+use super::not_condition::NotCondition;
 
 #[derive(Debug)]
 pub struct AndCondition {
@@ -8,7 +8,7 @@ pub struct AndCondition {
 }
 
 impl AndCondition {
-    pub fn parse(lexemes: &[&String], idx: usize) -> (ParseResult<Self>, usize) {
+    pub fn parse(lexemes: &[String], idx: usize) -> (ParseResult<Self>, usize) {
         let (not_condition_parse_result, last_idx) = NotCondition::parse(lexemes, idx);
         match not_condition_parse_result {
             ParseResult::Val(not_condition) => {
@@ -16,7 +16,8 @@ impl AndCondition {
                 // checkin if next lexeme is "or"
                 if let Some(lexeme) = lexemes.get(last_idx + 1) {
                     if *lexeme == "and" {
-                        let (and_condition_parse_result, last_idx) = Self::parse(lexemes, last_idx + 2);
+                        let (and_condition_parse_result, last_idx) =
+                            Self::parse(lexemes, last_idx + 2);
                         match and_condition_parse_result {
                             ParseResult::Val(and_condition) => {
                                 return (

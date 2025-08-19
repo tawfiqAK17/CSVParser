@@ -1,8 +1,8 @@
 use std::{
     env,
     fs::File,
-    io::{stdin, Write},
-    process::{exit, CommandArgs},
+    io::{Write, stdin},
+    process::{CommandArgs, exit},
 };
 mod csv_parser;
 mod logger;
@@ -22,8 +22,8 @@ fn main() {
             exit(2);
         }
     }
+    // getting the content of the file
     let (mut fields, mut rows): (Vec<String>, Vec<Vec<String>>);
-    let (mut backup_fields, mut backup_rows): (Vec<String>, Vec<Vec<String>>);
     match csv_parser::parse_file("/home/tawfiq/test.csv") {
         Some((f, r)) => {
             fields = f;
@@ -41,16 +41,21 @@ fn main() {
                 if command.trim_end() == "quit" {
                     println!("do you want to save the changes? (y or n)");
                     command.clear();
+                    // reading the user choice
                     match stdin().read_line(&mut command) {
                         Ok(_) => match command.trim_end() {
+                            // the user want to save changes
                             "y" => {
-                                let mut file = File::create("/home/tawfiq/test.csv");
+                                // will open and clear the file that is already exist
+                                let file = File::create("/home/tawfiq/test.csv");
                                 match file {
                                     Ok(mut f) => {
+                                      // write the fields names
                                         if let Err(e) = writeln!(f, "{}", fields.join(",")) {
                                             eprintln!("Failed to write to file: {}", e);
                                             continue;
                                         }
+                                        // write the rest of the rows
                                         for line in rows.iter() {
                                             if let Err(e) = writeln!(f, "{}", line.join(",")) {
                                                 eprintln!("Failed to write to file: {}", e);
@@ -65,20 +70,21 @@ fn main() {
                                     }
                                 }
                             }
+                            // the user don't want to save changes
                             "n" => {
                                 return;
                             }
-                            _ =>{
-                              println!("{}", command);
-continue;
-                            } ,
+                            _ => {
+                                println!("{}", command);
+                                continue;
+                            }
                         },
                         Err(_) => {
                             eprintln!("failed to read your choice");
                         }
                     }
                 }
-                let _ = query_engine::query(command.trim_end().to_string(), &mut fields, &mut rows);
+                query_engine::query(command.trim_end().to_string(), &mut fields, &mut rows);
                 println!();
             }
             Err(_) => {

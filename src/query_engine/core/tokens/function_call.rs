@@ -8,14 +8,15 @@ pub struct FunctionCall {
 }
 
 impl FunctionCall {
-    pub fn parse(lexemes: &[&String], idx: usize) -> ParseResult<Self> {
+    pub fn parse(lexemes: &[String], idx: usize) -> ParseResult<Self> {
         match lexemes.get(idx) {
             Some(_) => {}
             None => return ParseResult::None,
         }
-        let (function_option, last_idx) = Function::parse(lexemes, idx);
-        match function_option {
+        let (function_parse_result, last_idx) = Function::parse(lexemes, idx);
+        match function_parse_result {
             ParseResult::Val(function) => {
+              // recursive parse for nested function calls
                 match Self::parse(lexemes, last_idx) {
                     ParseResult::Val(function_call) => {
                       return ParseResult::Val(FunctionCall{function: Some(function), function_call: Some(Box::new(function_call))});

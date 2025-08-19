@@ -10,7 +10,7 @@ pub struct OrCondition {
 }
 
 impl OrCondition {
-    pub fn parse(lexemes: &[&String], idx: usize) -> (ParseResult<Self>, usize) {
+    pub fn parse(lexemes: &[String], idx: usize) -> (ParseResult<Self>, usize) {
         let (and_condition_parse_result, last_idx) = AndCondition::parse(lexemes, idx);
         match and_condition_parse_result {
             ParseResult::Val(and_condition) => {

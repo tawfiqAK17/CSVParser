@@ -9,10 +9,11 @@ pub struct PrimaryCondition {
 }
 
 impl PrimaryCondition {
-    pub fn parse(lexemes: &[&String], mut idx: usize) -> (ParseResult<Self>, usize) {
+    pub fn parse(lexemes: &[String], mut idx: usize) -> (ParseResult<Self>, usize) {
         match lexemes.get(idx) {
             Some(lexeme) => {
                 if *lexeme == "(" {
+                  // the case where the condition is between brackets
                     idx += 1;
                     let (condition_parse_result, last_idx) = Condition::parse(lexemes, idx);
                     match condition_parse_result {
@@ -45,6 +46,7 @@ impl PrimaryCondition {
                         }
                     }
                 } else {
+                  // the case where there is no brackets around the condition
                     let (comparison_parse_result, last_idx) = Comparison::parse(lexemes, idx);
                     match comparison_parse_result {
                         ParseResult::Val(comparison) => {

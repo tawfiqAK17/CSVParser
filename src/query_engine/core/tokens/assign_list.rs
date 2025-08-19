@@ -6,7 +6,7 @@ pub struct AssignList {
 }
 
 impl AssignList {
-    pub fn parse(lexemes: &[&String], idx: usize) -> ParseResult<Self> {
+    pub fn parse(lexemes: &[String], idx: usize) -> ParseResult<Self> {
         let mut assignments: Vec<Assignment> = Vec::new();
         let mut current_idx = idx;
         loop {

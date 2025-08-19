@@ -7,7 +7,7 @@ pub struct Condition {
 }
 
 impl Condition {
-    pub fn parse(lexemes: &[&String], idx: usize) -> (ParseResult<Self>, usize) {
+    pub fn parse(lexemes: &[String], idx: usize) -> (ParseResult<Self>, usize) {
         let (or_condition_parse_result, last_idx) = OrCondition::parse(lexemes, idx);
         match or_condition_parse_result {
             ParseResult::Val(or_condition) => {

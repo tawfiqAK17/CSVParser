@@ -9,7 +9,7 @@ pub struct SetQuery {
 }
 
 impl SetQuery {
-    pub fn parse(lexemes: &[&String]) -> ParseResult<Self> {
+    pub fn parse(lexemes: &[String]) -> ParseResult<Self> {
         if let Some(lexeme) = lexemes.get(0) {
             if *lexeme != "set" {
                 return ParseResult::None;
@@ -21,7 +21,7 @@ impl SetQuery {
             Some(lexeme) => {
                 let where_clause: Option<WhereClause>;
                 let assign_list: AssignList;
-                if *lexeme == "where" {
+                if *lexeme == "where" { // the case where there is a where clause
                     let (where_clause_parse_result, last_idx) = WhereClause::parse(lexemes, 1);
                     match where_clause_parse_result {
                         ParseResult::Val(val) => where_clause = Some(val),
@@ -54,7 +54,7 @@ impl SetQuery {
                             }
                         } else {
                             eprintln!(
-                                "missing a to key word at the beginning of the assigning list"
+                                "missing a 'to' key word at the beginning of the assigning list"
                             );
                             return ParseResult::Err;
                         }
@@ -62,7 +62,7 @@ impl SetQuery {
                         eprintln!("expecting an assigning list for the set command");
                         return ParseResult::Err;
                     }
-                } else if *lexeme == "to" {
+                } else if *lexeme == "to" { // the case where there is only the assigning list
                     let assign_list_parse_result = AssignList::parse(lexemes, 2);
                     match assign_list_parse_result {
                         ParseResult::Val(val) => {

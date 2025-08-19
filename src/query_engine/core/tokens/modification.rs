@@ -50,9 +50,10 @@ pub struct Modification {
 }
 
 impl Modification {
-    pub fn parse(lexemes: &[&String], idx: usize) -> (ParseResult<Self>, usize) {
+    pub fn parse(lexemes: &[String], idx: usize) -> (ParseResult<Self>, usize) {
         match lexemes.get(idx) {
             Some(lexeme1) => {
+                // lexeme1 must be a valid value for lhs
                 let lhs: Value;
                 let modifier: Option<Modifier>;
                 let rhs: Option<Value>;
@@ -70,10 +71,12 @@ impl Modification {
                 }
                 match lexemes.get(idx + 1) {
                     Some(lexeme2) => match lexeme2.as_str() {
+                        // lexeme2 must be a valid modifier
                         "+" | "-" | "*" | "/" | "%" | "^" | "||" => {
                             modifier = Some(Modifier::get_modifier_from_lexeme(lexeme2));
                             match lexemes.get(idx + 2) {
                                 Some(lexeme3) => {
+                                    // lexeme3 must be a valid value for the rhs
                                     if let Some(field_name) = value::parse_field_name(lexeme3) {
                                         rhs = Some(Value::FieldName(field_name));
                                     } else if let Some(number) = value::parse_number(lexeme3) {
@@ -90,6 +93,7 @@ impl Modification {
                                     );
                                 }
                                 None => {
+                                    // the rhs was not provided
                                     eprintln!(
                                         "the modifier {lexeme2} require a right hand side value"
                                     );
@@ -109,6 +113,7 @@ impl Modification {
                             );
                         }
                         _ => {
+                            // the modifier was not provided
                             return (
                                 ParseResult::Val(Modification {
                                     lhs,
@@ -120,6 +125,7 @@ impl Modification {
                         }
                     },
                     None => {
+                        // the modifier was not provided
                         return (
                             ParseResult::Val(Modification {
                                 lhs,
@@ -141,6 +147,7 @@ impl Modification {
                     let lhs: f32;
                     let rhs: f32;
                     match &self.lhs {
+                        // extracting the value of the lhs
                         Value::Number(number) => lhs = *number,
                         Value::FieldName(field_name) => {
                             match fields.iter().position(|f| f == field_name) {
@@ -168,6 +175,7 @@ impl Modification {
                         }
                     }
                     match &self.rhs {
+                        // extracting the value of the rhs
                         Some(rhs_val) => match rhs_val {
                             Value::Number(number) => rhs = *number,
                             Value::FieldName(field_name) => {
@@ -204,7 +212,13 @@ impl Modification {
                         ArithmeticModifier::Plus => return Some((lhs + rhs).to_string()),
                         ArithmeticModifier::Minus => return Some((lhs - rhs).to_string()),
                         ArithmeticModifier::Multiply => return Some((lhs * rhs).to_string()),
-                        ArithmeticModifier::Divide => return Some((lhs / rhs).to_string()),
+                        ArithmeticModifier::Divide => {
+                            if rhs == 0f32 {
+                                eprintln!("can not divide by 0");
+                                return Some(lhs.to_string());
+                            }
+                            return Some((lhs / rhs).to_string());
+                        }
                         ArithmeticModifier::Modulo => return Some((lhs % rhs).to_string()),
                         ArithmeticModifier::Power => return Some((lhs.powf(rhs)).to_string()),
                     }
@@ -213,6 +227,7 @@ impl Modification {
                     let lhs: String;
                     let rhs: Option<String>;
                     match &self.lhs {
+                      // extracting the lhs
                         Value::Literal(val) => lhs = val.clone(),
                         Value::FieldName(field_name) => {
                             match fields.iter().position(|f| f == field_name) {
@@ -231,6 +246,7 @@ impl Modification {
                         }
                     }
                     match &self.rhs {
+                      // extracting the rhs
                         Some(rhs_val) => match rhs_val {
                             Value::Literal(val) => rhs = Some(val.clone()),
                             Value::FieldName(field_name) => {
@@ -244,7 +260,7 @@ impl Modification {
                             }
                             _ => {
                                 eprintln!(
-                                    "a string operator can not be applied to a non numeric value"
+                                    "a string operator can not be applied to a value that is not a string"
                                 );
                                 return None;
                             }
@@ -270,6 +286,7 @@ impl Modification {
                 }
             },
             None => match &self.lhs {
+              // the case where the modification is just a value
                 Value::FieldName(val) => match fields.iter().position(|f| f == val) {
                     Some(idx) => return Some(row[idx].clone()),
                     None => {
