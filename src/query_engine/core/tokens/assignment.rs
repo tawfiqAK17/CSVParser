@@ -46,7 +46,7 @@ impl Assignment {
                         }
                     }
                 } else {
-                    eprintln!("expecting the name of the field witch will be modified");
+                    eprintln!("expecting the name of the field which will be modified");
                     return (ParseResult::Err, idx);
                 }
             }

@@ -2,6 +2,7 @@ use super::ParseResult;
 use super::function_call::FunctionCall;
 use super::value;
 use super::where_clause::WhereClause;
+use terminal_size::{Width, terminal_size};
 
 #[derive(Debug)]
 pub struct GetQuery {
@@ -127,29 +128,29 @@ impl GetQuery {
             // this for loop will evaluate the where condition for every line
             for i in 0..rows.len() {
                 if where_clause.evaluate(fields, &rows[i]) {
-                  // the line satisfies the condition
+                    // the line satisfies the condition
                     valid_rows.push(&rows[i]);
                 }
             }
         } else {
-          // all lines are valid because there is no where clause
+            // all lines are valid because there is no where clause
             for i in 0..rows.len() {
                 valid_rows.push(&rows[i]);
             }
         }
         if let Some(function_call) = &self.function_call {
-          // evaluate the function call on the valid rows
+            // evaluate the function call on the valid rows
             function_call.evaluate(fields, &mut valid_rows);
         }
         self.print_result(fields, &valid_rows);
     }
 
     fn print_result(&self, fields: &Vec<String>, rows: &Vec<&Vec<String>>) {
+        println!();
         let mut idxs: Vec<usize> = Vec::new();
-        let mut select_all: bool = false;
         for selector in self.selector.iter() {
             if selector == "*" {
-                select_all = true;
+                idxs = (0..fields.len()).collect();
                 break;
             }
             match fields.iter().position(|f| f == selector) {
@@ -160,29 +161,86 @@ impl GetQuery {
                 }
             }
         }
-        if select_all {
-            idxs.clear();
+        let mut longest_vals_len = self.get_longest_vals_in_rows(idxs.clone(), fields, rows);
+        let terminal_width: u16; // the width of the terminal (in char)
+
+        if let Some((Width(w), _)) = terminal_size() {
+            terminal_width = w;
+        } else {
+            terminal_width = u16::MAX; // it there is an error set the with to the max
         }
-        self.print_rows(&idxs, rows);
-    }
-    fn print_row(&self, idxs: &Vec<usize>, row: &Vec<String>) {
-        if idxs.is_empty() {
-            for val in row {
-                print!("{val},");
+
+        // while the length of the longest values + the separator and the space after the separator
+        // is greater than the terminal width we cut the longest value to half and add the 3 for
+        // the 3 dotes that indicates the value isn't fully printed
+        while longest_vals_len.iter().sum::<usize>() + 2 * idxs.len() > terminal_width as usize {
+            if let Some(max_val) = longest_vals_len.iter().max() {
+                if let Some(max_val_idx) = longest_vals_len.iter().position(|i| i == max_val) {
+                    longest_vals_len[max_val_idx] = max_val / 2 + 3;
+                }
             }
-            println!();
-            return;
         }
-        for i in 0..row.len() {
-            if idxs.contains(&i) {
-                print!("{},", row[i]);
+
+        self.print_row(&idxs, fields, &longest_vals_len);
+        self.print_rows(&idxs, rows, &longest_vals_len);
+    }
+    // this method returns the length longest value in each column
+    fn get_longest_vals_in_rows(
+        &self,
+        mut idxs: Vec<usize>,
+        fields: &Vec<String>,
+        rows: &Vec<&Vec<String>>,
+    ) -> Vec<usize> {
+        if idxs.is_empty() {
+            // the user is using the * selector so all fields will be included
+            idxs = (0..fields.len()).collect();
+        }
+        let mut longest_vals: Vec<usize> = vec![0; fields.len()];
+
+        for i in idxs.iter() {
+            longest_vals[i.clone()] = fields[i.clone()].len();
+        }
+
+        for i in idxs.iter() {
+            for row in rows.iter() {
+                if row[i.clone()].len() > longest_vals[i.clone()] {
+                    longest_vals[i.clone()] = row[i.clone()].len();
+                }
+            }
+        }
+        return longest_vals;
+    }
+    fn print_rows(
+        &self,
+        idxs: &Vec<usize>,
+        rows: &Vec<&Vec<String>>,
+        longerst_vals_len: &Vec<usize>,
+    ) {
+        for row in rows {
+            self.print_row(idxs, &row, longerst_vals_len);
+        }
+    }
+
+    fn print_row(&self, idxs: &Vec<usize>, row: &Vec<String>, longerst_vals_len: &Vec<usize>) {
+        for &i in idxs {
+            if longerst_vals_len[i] > 3 {
+                if row[i].len() > longerst_vals_len[i] {
+                    print!("{}...", &row[i][0..longerst_vals_len[i] - 3]);
+                } else {
+                    print!("{}", row[i]);
+                    for _ in row[i].len()..longerst_vals_len[i] {
+                        print!(" ");
+                    }
+                }
+            } else {
+                println!("{}", row[i])
+            }
+            // the last val in a row wont have a , after it
+            if i < idxs[idxs.len() - 1] {
+                print!(", ");
             }
         }
         println!();
-    }
-    fn print_rows(&self, idxs: &Vec<usize>, rows: &Vec<&Vec<String>>) {
-        for row in rows {
-            self.print_row(idxs, &row);
-        }
+        return;
     }
 }

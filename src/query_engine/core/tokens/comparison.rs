@@ -79,7 +79,7 @@ impl Comparison {
                     }
                     idx += 1;
                     if let Some(lexeme) = lexemes.get(idx) {
-                        // the third lexeme is the rhs witch can be a literal a field name or a
+                        // the third lexeme is the rhs which can be a literal a field name or a
                         // number
                         if let Some(literal) = value::parse_literal(lexeme) {
                             rhs = Value::Literal(literal);
