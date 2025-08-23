@@ -2,6 +2,7 @@ use super::ParseResult;
 use super::function_call::FunctionCall;
 use super::value;
 use super::where_clause::WhereClause;
+use crate::OPTIONS;
 use terminal_size::{Width, terminal_size};
 
 #[derive(Debug)]
@@ -180,9 +181,7 @@ impl GetQuery {
                 }
             }
         }
-
-        self.print_row(&idxs, fields, &longest_vals_len);
-        self.print_rows(&idxs, rows, &longest_vals_len);
+        self.print_rows(&idxs, fields, rows, &longest_vals_len);
     }
     // this method returns the length longest value in each column
     fn get_longest_vals_in_rows(
@@ -213,15 +212,23 @@ impl GetQuery {
     fn print_rows(
         &self,
         idxs: &Vec<usize>,
+        fields: &Vec<String>,
         rows: &Vec<&Vec<String>>,
         longerst_vals_len: &Vec<usize>,
     ) {
+        let options = OPTIONS.get().unwrap();
+        let separator: &String;
+        match options.get(&crate::Options::FieldsSeparator) {
+            Some(sep) => separator = sep,
+            None => unreachable!("there is no default value for the separator option"),
+        }
+        self.print_row(idxs, &fields, longerst_vals_len, separator);
         for row in rows {
-            self.print_row(idxs, &row, longerst_vals_len);
+            self.print_row(idxs, &row, longerst_vals_len, separator);
         }
     }
 
-    fn print_row(&self, idxs: &Vec<usize>, row: &Vec<String>, longerst_vals_len: &Vec<usize>) {
+    fn print_row(&self, idxs: &Vec<usize>, row: &Vec<String>, longerst_vals_len: &Vec<usize>, separator: &String) {
         for &i in idxs {
             if longerst_vals_len[i] > 3 {
                 if row[i].len() > longerst_vals_len[i] {
@@ -233,11 +240,11 @@ impl GetQuery {
                     }
                 }
             } else {
-                println!("{}", row[i])
+                print!("{}", row[i])
             }
             // the last val in a row wont have a , after it
             if i < idxs[idxs.len() - 1] {
-                print!(", ");
+                print!("{} ", separator);
             }
         }
         println!();

@@ -51,22 +51,77 @@ pub struct Comparison {
 impl Comparison {
     pub fn parse(lexemes: &[String], mut idx: usize) -> (ParseResult<Self>, usize) {
         if let Some(lexeme) = lexemes.get(idx) {
-          // the first value must be a field name
+            // the first value must be a field name
             if let Some(field_name) = value::parse_field_name(lexeme) {
                 idx += 1;
-                
+
                 if let Some(lexeme) = lexemes.get(idx) {
                     let comparison_op: ComparisonOps;
                     let rhs: Value;
 
                     // the second lexeme must be a comparison operator
-                    match &lexeme[..] {
+                    match lexeme.as_str() {
                         "==" => comparison_op = ComparisonOps::Equal,
                         ">=" => comparison_op = ComparisonOps::GreaterThanOrEqual,
                         "<=" => comparison_op = ComparisonOps::LessThanOrEqual,
                         ">" => comparison_op = ComparisonOps::GreaterThan,
                         "<" => comparison_op = ComparisonOps::LessThan,
-                        // "between" => {},
+                        "between" => {
+                            let val1: Value;
+                            let val2: Value;
+                            // the first parameter for the between operator
+                            if let Some(val) = lexemes.get(idx + 1) {
+                                if let Some(field_name) = value::parse_field_name(val) {
+                                    val1 = Value::FieldName(val.clone());
+                                } else if let Some(number) = value::parse_number(val) {
+                                    val1 = Value::Number(number);
+                                } else {
+                                    eprintln!(
+                                        "the between operator can only accept a field name or a number as its parameters"
+                                    );
+                                    return (ParseResult::Err, idx - 1);
+                                }
+                            } else {
+                                eprintln!("the between operator expect two parameters: between param1 and param2");
+                                return (ParseResult::Err, idx - 1);
+                            }
+                            // the and key word
+                            if let Some(val) = lexemes.get(idx + 2) {
+                                if val == "and" {
+                                    // the second parameter for the between operator
+                                    if let Some(val) = lexemes.get(idx + 3) {
+                                        if let Some(field_name) = value::parse_field_name(val) {
+                                            val2 = Value::FieldName(val.clone());
+                                        } else if let Some(number) = value::parse_number(val) {
+                                            val2 = Value::Number(number);
+                                        } else {
+                                            eprintln!(
+                                                "the between operator can only accept a field name or a number as its parameters"
+                                            );
+                                            return (ParseResult::Err, idx - 1);
+                                        }
+                                        return (
+                                            ParseResult::Val(Comparison {
+                                                field_name,
+                                                comparison_op: ComparisonOps::BetweenOp(val1, val2),
+                                                rhs: Value::None,
+                                            }),
+                                            idx + 3,
+                                        );
+                                    } else {
+                                        eprintln!("the between operator expect two parameters: between param1 and param2");
+                                        return (ParseResult::Err, idx - 1);
+                                    }
+                                } else {
+                                    // the val is not the key word 'and'
+                                    eprintln!("the between operator expect two parameters: between param1 and param2");
+                                    return (ParseResult::Err, idx - 1);
+                                }
+                            } else {
+                                eprintln!("the between operator expect two parameters: between param1 and param2");
+                                return (ParseResult::Err, idx - 1);
+                            }
+                        }
                         "is" => comparison_op = ComparisonOps::Is,
                         "isnot" => comparison_op = ComparisonOps::IsNot,
                         "contains" => comparison_op = ComparisonOps::Contains,
@@ -230,9 +285,12 @@ impl Comparison {
                 }
 
                 _ => {
-                  eprintln!("the value {} can not be compared to the value at field '{}'",self.rhs, self.field_name);
-                  return false;
-                },
+                    eprintln!(
+                        "the value {} can not be compared to the value at field '{}'",
+                        self.rhs, self.field_name
+                    );
+                    return false;
+                }
             },
             ComparisonOps::IsNot => match &self.rhs {
                 Value::Literal(val) => match fields.iter().position(|f| *f == self.field_name) {
@@ -261,9 +319,12 @@ impl Comparison {
                 }
 
                 _ => {
-                  eprintln!("the value {} can not be compared to the value at field '{}'",self.rhs, self.field_name);
-                  return false;
-                },
+                    eprintln!(
+                        "the value {} can not be compared to the value at field '{}'",
+                        self.rhs, self.field_name
+                    );
+                    return false;
+                }
             },
 
             ComparisonOps::Contains => match &self.rhs {
@@ -290,9 +351,12 @@ impl Comparison {
                     }
                 }
                 _ => {
-                  eprintln!("the value {} can not be compared to the value at field '{}'",self.rhs, self.field_name);
-                  return false;
-                },
+                    eprintln!(
+                        "the value {} can not be compared to the value at field '{}'",
+                        self.rhs, self.field_name
+                    );
+                    return false;
+                }
             },
             ComparisonOps::StartsWith => match &self.rhs {
                 Value::Literal(val) => match fields.iter().position(|f| *f == self.field_name) {
@@ -318,9 +382,12 @@ impl Comparison {
                     }
                 }
                 _ => {
-                  eprintln!("the value {} can not be compared to the value at field '{}'",self.rhs, self.field_name);
-                  return false;
-                },
+                    eprintln!(
+                        "the value {} can not be compared to the value at field '{}'",
+                        self.rhs, self.field_name
+                    );
+                    return false;
+                }
             },
             ComparisonOps::EndsWith => match &self.rhs {
                 Value::Literal(val) => match fields.iter().position(|f| *f == self.field_name) {
@@ -346,9 +413,12 @@ impl Comparison {
                     }
                 }
                 _ => {
-                  eprintln!("the value {} can not be compared to the value at field '{}'",self.rhs, self.field_name);
-                  return false;
-                },
+                    eprintln!(
+                        "the value {} can not be compared to the value at field '{}'",
+                        self.rhs, self.field_name
+                    );
+                    return false;
+                }
             },
             ComparisonOps::In => todo!(),
         }
@@ -374,7 +444,9 @@ impl Comparison {
                 },
                 None => return false,
             },
-            _ => todo!(),
+            _ => unreachable!(
+                "the value passed to 'greater_than_or_equal' function can only be a number of a field name"
+            ),
         }
     }
     fn less_than_or_equal(&self, value: &Value, fields: &Vec<String>, row: &Vec<String>) -> bool {

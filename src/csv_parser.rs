@@ -1,3 +1,5 @@
+use crate::{OPTIONS, Options};
+
 use super::query_engine;
 use std::{
     fs::File,
@@ -87,7 +89,13 @@ pub fn parse_file(path: &str) -> Option<(Vec<String>, Vec<Vec<String>>)> {
             return None;
         }
     }
-
+    // determining the separator
+    let separator: String;
+    let options = OPTIONS.get().unwrap();
+    match options.get(&Options::FieldsSeparator) {
+        Some(sep) => separator = sep.clone(),
+        None => unreachable!("the default fields separator is not set"),
+    }
     let reader = BufReader::new(file);
 
     let mut get_fields = true;
@@ -112,7 +120,7 @@ pub fn parse_file(path: &str) -> Option<(Vec<String>, Vec<Vec<String>>)> {
         // if the fields are not extracted yet
         if get_fields {
             get_fields = false;
-            let fields_vals: Vec<&str> = line_content.split(',').collect();
+            let fields_vals: Vec<&str> = line_content.split(separator.as_str()).collect();
             for val in fields_vals {
                 let field = val.trim().to_string();
                 if field.is_empty() {
@@ -124,7 +132,7 @@ pub fn parse_file(path: &str) -> Option<(Vec<String>, Vec<Vec<String>>)> {
             continue;
         }
 
-        let line_vals: Vec<&str> = line_content.split(',').collect();
+        let line_vals: Vec<&str> = line_content.split(separator.as_str()).collect();
         if line_vals.len() != fields.len() {
             println!(
                 "the line {} contains {} value, but there is {} field name",
@@ -138,6 +146,7 @@ pub fn parse_file(path: &str) -> Option<(Vec<String>, Vec<Vec<String>>)> {
         let mut row: Vec<String> = Vec::new();
         for mut i in 0..line_vals.len() {
             let val = line_vals[i].trim().to_string();
+            // if the value of the field is empty
             if val.is_empty() {
                 let mut new_val = String::new();
                 println!("the value of the field {} is empty at line", fields[i]);
@@ -148,6 +157,7 @@ pub fn parse_file(path: &str) -> Option<(Vec<String>, Vec<Vec<String>>)> {
                 match stdin().read_line(&mut new_val) {
                     Ok(_) => {
                         new_val = new_val.trim().to_string();
+                        // the user pressed Return
                         if new_val.is_empty() {
                             println!(
                                 "this line would not be considered and will be removed when you save the file"
@@ -155,6 +165,7 @@ pub fn parse_file(path: &str) -> Option<(Vec<String>, Vec<Vec<String>>)> {
                             row.clear();
                             break;
                         }
+                        // the user insert a value
                         row.push(new_val);
                     }
                     Err(_) => {
@@ -164,9 +175,11 @@ pub fn parse_file(path: &str) -> Option<(Vec<String>, Vec<Vec<String>>)> {
                     }
                 }
             } else {
+                // the value is not empty
                 row.push(val);
             }
         }
+        // so the empty lines will be escaped
         if !row.is_empty() {
             rows.push(row);
         }

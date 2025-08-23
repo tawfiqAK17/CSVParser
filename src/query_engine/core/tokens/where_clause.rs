@@ -10,7 +10,7 @@ impl WhereClause {
     pub fn parse(lexemes: &[String], mut idx: usize) -> (ParseResult<Self>, usize) {
         match lexemes.get(idx) {
             Some(val) => {
-                if (*val == "where") {
+                if *val == "where" {
                     let (option_condition, last_idx) = Condition::parse(lexemes, idx + 1);
                     match option_condition {
                         ParseResult::Val(condition) => {

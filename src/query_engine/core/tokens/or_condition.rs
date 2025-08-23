@@ -1,5 +1,3 @@
-use std::iter::Product;
-
 use super::and_condition::AndCondition;
 use super::ParseResult;
 
