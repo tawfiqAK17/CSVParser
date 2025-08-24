@@ -27,10 +27,9 @@ ComparisonOp      = NumericalOp | StringOp
 NumericalOp       = "==" | "!=" | ">" | "<" | ">=" | "<=" | BetweenOp
 BetweenOp         = "between" (Number | FieldName) "and" (Number | FieldName)
 StringOp          = "is" | "contains" | "starts-with" | "ends-with"
-PrimitiveValue    = Literal | Number | Boolean | List
+PrimitiveValue    = Literal | Number | List
 Modifier          = "+" | "-" | "*" | "/" | "%" | "concat" | "to-lower" | "to-upper"
 Literal           = '"' [^"]* '"' | "'" [^']* "'"
 Number            = Float
-Boolean           = "true" | "false"
 List              = "[" PrimitiveValue ("," PrimitiveValue)* "]" | GetQuery
 FieldName         = $String

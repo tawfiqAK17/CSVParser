@@ -1,4 +1,5 @@
 use super::ParseResult;
+use crate::log_error;
 
 use super::condition::Condition;
 #[derive(Debug)]
@@ -17,7 +18,7 @@ impl WhereClause {
                             return (ParseResult::Val(WhereClause { condition }), last_idx);
                         }
                         ParseResult::None => {
-                            eprintln!("expecting a condition after the where key word");
+                            log_error!("expecting a condition after the where key word");
                             return (ParseResult::Err, idx);
                         }
                         ParseResult::Err => return (ParseResult::Err, idx),

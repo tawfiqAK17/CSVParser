@@ -1,24 +1,27 @@
-use std::fmt::Display;
-
-pub enum LogLevel {
-    Info,
-    Warning,
-    Error,
+#[macro_export]
+macro_rules! log_info {
+    ($($arg:tt)*) => {
+        println!("");
+        println!("INFO: {}", format_args!($($arg)*));
+    };
 }
 
-pub fn log<T>(log_level: LogLevel, msg: T)
-where
-    T: Display,
-{
-    match log_level {
-        LogLevel::Info => {
-            println!("INFO: {msg}");
-        }
-        LogLevel::Warning => {
-            println!("WARNING: {msg}");
-        }
-        LogLevel::Error => {
-            eprintln!("ERROR: {msg}");
-        }
-    }
+#[macro_export]
+macro_rules! log_warning {
+    ($($arg:tt)*) => {
+        println!("");
+        println!("WARNING: {}", format_args!($($arg)*));
+    };
 }
+
+#[macro_export]
+macro_rules! log_error {
+    ($($arg:tt)*) => {
+        println!("");
+        eprintln!("ERROR: {}", format_args!($($arg)*));
+    };
+}
+
+pub use crate::log_error;
+pub use crate::log_info;
+pub use crate::log_warning;

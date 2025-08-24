@@ -1,4 +1,5 @@
 use super::ParseResult;
+use crate::log_error;
 
 use super::value;
 use core::f32;
@@ -29,7 +30,7 @@ impl Function {
         match lexemes.get(idx) {
             Some(lexeme) => {
               if !Functions::get_available_functions_names().contains(&lexeme.as_str()) {
-                eprintln!("no function named {}", lexeme);
+                log_error!("no function named {}", lexeme);
                 return (ParseResult::Err, idx);
               }
                 idx += 1;
@@ -72,14 +73,14 @@ impl Function {
                             }
                             "head" | "tail" => {
                               // these functions does not accept a field name as a parameter
-                                eprintln!(
+                                log_error!(
                                     "the function {} expect a parameter of type number",
                                     lexeme
                                 );
                                 return (ParseResult::Err, idx);
                             }
                             _ => {
-                                eprintln!("no function named {}", lexeme);
+                                log_error!("no function named {}", lexeme);
                                 return (ParseResult::Err, idx);
                             }
                         },
@@ -102,20 +103,20 @@ impl Function {
                                     );
                                 }
                                 "sort" | "rsort" | "nsort" | "reverse-nsort" => {
-                                    eprintln!(
+                                    log_error!(
                                         "the function {} expect a parameter of type field name",
                                         lexeme
                                     );
                                     return (ParseResult::Err, idx);
                                 }
                                 _ => {
-                                    eprintln!("no function named {}", lexeme);
+                                    log_error!("no function named {}", lexeme);
                                     return (ParseResult::Err, idx);
                                 }
                             },
                             None => {
                               // the parameter is neither a field name or a number
-                                eprintln!(
+                                log_error!(
                                     "the parameters of function can only be a field name or a number"
                                 );
                                 return (ParseResult::Err, idx);
@@ -124,7 +125,7 @@ impl Function {
                     },
                     None => {
                         // the function exist but no parameter was given
-                        eprintln!("expecting a parameter for the function {}", lexeme);
+                        log_error!("expecting a parameter for the function {}", lexeme);
                         return (ParseResult::Err, idx);
                     }
                 }
@@ -140,7 +141,7 @@ impl Function {
                         self.sort(idx, rows);
                     }
                     None => {
-                        eprintln!("no field named {}", field_name);
+                        log_error!("no field named {}", field_name);
                     }
                 }
             }
@@ -150,7 +151,7 @@ impl Function {
                         self.reverse_sort(idx, rows);
                     }
                     None => {
-                        eprintln!("no field named {}", field_name);
+                        log_error!("no field named {}", field_name);
                     }
                 }
             }
@@ -160,7 +161,7 @@ impl Function {
                         self.n_sort(idx, rows);
                     }
                     None => {
-                        eprintln!("no field named {}", field_name);
+                        log_error!("no field named {}", field_name);
                     }
                 }
             }
@@ -171,7 +172,7 @@ impl Function {
                         self.n_reverse_sort(idx, rows);
                     }
                     None => {
-                        eprintln!("no field named {}", field_name);
+                        log_error!("no field named {}", field_name);
                     }
                 }
             }
@@ -213,14 +214,14 @@ impl Function {
         match a.parse::<f32>() {
             Ok(val) => lhs = val,
             Err(_) => {
-                eprintln!("\"{a}\" is not a numerical value it has been evaluated as infinity");
+                log_error!("\"{a}\" is not a numerical value it has been evaluated as infinity");
                 return Ordering::Greater;
             }
         }
         match b.parse::<f32>() {
             Ok(val) => rhs = val,
             Err(_) => {
-                eprintln!("\"{b}\" is not a numerical value it has been evaluated as infinity");
+                log_error!("\"{b}\" is not a numerical value it has been evaluated as infinity");
                 return Ordering::Less;
             }
         }

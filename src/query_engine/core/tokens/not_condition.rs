@@ -1,5 +1,6 @@
-use super::primary_condition::PrimaryCondition;
 use super::ParseResult;
+use super::primary_condition::PrimaryCondition;
+use crate::log_error;
 
 #[derive(Debug)]
 pub struct NotCondition {
@@ -20,14 +21,18 @@ impl NotCondition {
             return (ParseResult::None, idx);
         }
         match lexemes.get(idx) {
-            Some(lexeme) => {
-                let (primary_condition_parse_result, last_idx) = PrimaryCondition::parse(lexemes, idx);
+            Some(_) => {
+                let (primary_condition_parse_result, last_idx) =
+                    PrimaryCondition::parse(lexemes, idx);
                 match primary_condition_parse_result {
                     ParseResult::Val(primary_condition) => {
-                        return (ParseResult::Val(NotCondition {
-                            not,
-                            primary_condition,
-                        }), last_idx);
+                        return (
+                            ParseResult::Val(NotCondition {
+                                not,
+                                primary_condition,
+                            }),
+                            last_idx,
+                        );
                     }
                     ParseResult::None => {
                         return (ParseResult::None, idx);
@@ -38,7 +43,7 @@ impl NotCondition {
                 }
             }
             None => {
-                eprintln!("expecting a condition after the not key word");
+                log_error!("expecting a condition after the not key word");
                 return (ParseResult::Err, idx);
             }
         }

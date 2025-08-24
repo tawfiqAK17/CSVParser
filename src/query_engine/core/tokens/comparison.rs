@@ -1,9 +1,9 @@
 use super::ParseResult;
 use super::value;
-
 use super::value::Value;
-use std::cmp::Ordering;
-use std::fmt::Display;
+use crate::log_error;
+use crate::log_info;
+use std::{cmp::Ordering, fmt::Display};
 
 #[derive(Debug)]
 pub enum ComparisonOps {
@@ -62,6 +62,7 @@ impl Comparison {
                     // the second lexeme must be a comparison operator
                     match lexeme.as_str() {
                         "==" => comparison_op = ComparisonOps::Equal,
+                        "!=" => comparison_op = ComparisonOps::NotEqual,
                         ">=" => comparison_op = ComparisonOps::GreaterThanOrEqual,
                         "<=" => comparison_op = ComparisonOps::LessThanOrEqual,
                         ">" => comparison_op = ComparisonOps::GreaterThan,
@@ -72,17 +73,19 @@ impl Comparison {
                             // the first parameter for the between operator
                             if let Some(val) = lexemes.get(idx + 1) {
                                 if let Some(field_name) = value::parse_field_name(val) {
-                                    val1 = Value::FieldName(val.clone());
+                                    val1 = Value::FieldName(field_name);
                                 } else if let Some(number) = value::parse_number(val) {
                                     val1 = Value::Number(number);
                                 } else {
-                                    eprintln!(
+                                    log_error!(
                                         "the between operator can only accept a field name or a number as its parameters"
                                     );
                                     return (ParseResult::Err, idx - 1);
                                 }
                             } else {
-                                eprintln!("the between operator expect two parameters: between param1 and param2");
+                                log_error!(
+                                    "the between operator expect two parameters: between param1 and param2"
+                                );
                                 return (ParseResult::Err, idx - 1);
                             }
                             // the and key word
@@ -91,12 +94,12 @@ impl Comparison {
                                     // the second parameter for the between operator
                                     if let Some(val) = lexemes.get(idx + 3) {
                                         if let Some(field_name) = value::parse_field_name(val) {
-                                            val2 = Value::FieldName(val.clone());
+                                            val2 = Value::FieldName(field_name);
                                         } else if let Some(number) = value::parse_number(val) {
                                             val2 = Value::Number(number);
                                         } else {
-                                            eprintln!(
-                                                "the between operator can only accept a field name or a number as its parameters"
+                                            log_error!(
+                                                "the between operator can only accept a field name or a number as its parameters",
                                             );
                                             return (ParseResult::Err, idx - 1);
                                         }
@@ -109,16 +112,22 @@ impl Comparison {
                                             idx + 3,
                                         );
                                     } else {
-                                        eprintln!("the between operator expect two parameters: between param1 and param2");
+                                        log_error!(
+                                            "the between operator expect two parameters: between param1 and param2"
+                                        );
                                         return (ParseResult::Err, idx - 1);
                                     }
                                 } else {
                                     // the val is not the key word 'and'
-                                    eprintln!("the between operator expect two parameters: between param1 and param2");
+                                    log_error!(
+                                        "the between operator expect two parameters: between param1 and param2"
+                                    );
                                     return (ParseResult::Err, idx - 1);
                                 }
                             } else {
-                                eprintln!("the between operator expect two parameters: between param1 and param2");
+                                log_error!(
+                                    "the between operator expect two parameters: between param1 and param2"
+                                );
                                 return (ParseResult::Err, idx - 1);
                             }
                         }
@@ -127,8 +136,12 @@ impl Comparison {
                         "contains" => comparison_op = ComparisonOps::Contains,
                         "starts-with" => comparison_op = ComparisonOps::StartsWith,
                         "ends-with" => comparison_op = ComparisonOps::EndsWith,
+                        "in" => {
+                            log_error!("the in operator is not implemented yet");
+                            return (ParseResult::Err, idx);
+                        }
                         _ => {
-                            eprintln!("expecting a comparison operator after the field name");
+                            log_error!("expecting a comparison operator after the field name");
                             return (ParseResult::None, idx);
                         }
                     }
@@ -143,7 +156,7 @@ impl Comparison {
                         } else if let Some(number) = value::parse_number(lexeme) {
                             rhs = Value::Number(number);
                         } else {
-                            eprintln!(
+                            log_error!(
                                 "{} can not be considered as a valid value to compare to",
                                 lexeme
                             );
@@ -159,17 +172,17 @@ impl Comparison {
                         );
                     } else {
                     }
-                    eprintln!(
+                    log_error!(
                         "expecting a value after the comparison operator {}",
                         comparison_op
                     );
                     return (ParseResult::Err, idx);
                 } else {
-                    eprintln!("expecting a comparison operator after the field name");
+                    log_error!("expecting a comparison operator after the field name");
                     return (ParseResult::Err, idx);
                 }
             } else {
-                eprintln!("expecting a field name for the comparison");
+                log_error!("expecting a field name for the comparison");
                 return (ParseResult::Err, idx);
             }
         } else {
@@ -262,7 +275,7 @@ impl Comparison {
                 Value::Literal(val) => match fields.iter().position(|f| *f == self.field_name) {
                     Some(idx) => return *row[idx] == val.to_string(),
                     None => {
-                        eprintln!("no field named {}", self.field_name);
+                        log_error!("no field named {}", self.field_name);
                         return false;
                     }
                 },
@@ -273,21 +286,22 @@ impl Comparison {
                                 return row[idx1] == row[idx2];
                             }
                             None => {
-                                eprintln!("no field named {}", field_name);
+                                log_error!("no field named {}", field_name);
                                 return false;
                             }
                         },
                         None => {
-                            eprintln!("no field named {}", self.field_name);
+                            log_error!("no field named {}", self.field_name);
                             return false;
                         }
                     }
                 }
 
                 _ => {
-                    eprintln!(
+                    log_error!(
                         "the value {} can not be compared to the value at field '{}'",
-                        self.rhs, self.field_name
+                        self.rhs,
+                        self.field_name
                     );
                     return false;
                 }
@@ -296,7 +310,7 @@ impl Comparison {
                 Value::Literal(val) => match fields.iter().position(|f| *f == self.field_name) {
                     Some(idx) => return *row[idx] != *val,
                     None => {
-                        eprintln!("no field named {}", self.field_name);
+                        log_error!("no field named {}", self.field_name);
                         return false;
                     }
                 },
@@ -307,21 +321,22 @@ impl Comparison {
                                 return row[idx1] != row[idx2];
                             }
                             None => {
-                                eprintln!("no field named {}", field_name);
+                                log_error!("no field named {}", field_name);
                                 return false;
                             }
                         },
                         None => {
-                            eprintln!("no field named {}", self.field_name);
+                            log_error!("no field named {}", self.field_name);
                             return false;
                         }
                     }
                 }
 
                 _ => {
-                    eprintln!(
+                    log_error!(
                         "the value {} can not be compared to the value at field '{}'",
-                        self.rhs, self.field_name
+                        self.rhs,
+                        self.field_name
                     );
                     return false;
                 }
@@ -331,7 +346,7 @@ impl Comparison {
                 Value::Literal(val) => match fields.iter().position(|f| *f == self.field_name) {
                     Some(idx) => return row[idx].contains(val),
                     None => {
-                        eprintln!("no field named {}", self.field_name);
+                        log_error!("no field named {}", self.field_name);
                         return false;
                     }
                 },
@@ -340,20 +355,21 @@ impl Comparison {
                         Some(idx1) => match fields.iter().position(|f| f == field_name) {
                             Some(idx2) => return row[idx1].contains(&row[idx2]),
                             None => {
-                                eprintln!("no field named {}", self.field_name);
+                                log_error!("no field named {}", self.field_name);
                                 return false;
                             }
                         },
                         None => {
-                            eprintln!("no field named {}", self.field_name);
+                            log_error!("no field named {}", self.field_name);
                             return false;
                         }
                     }
                 }
                 _ => {
-                    eprintln!(
+                    log_error!(
                         "the value {} can not be compared to the value at field '{}'",
-                        self.rhs, self.field_name
+                        self.rhs,
+                        self.field_name
                     );
                     return false;
                 }
@@ -362,7 +378,7 @@ impl Comparison {
                 Value::Literal(val) => match fields.iter().position(|f| *f == self.field_name) {
                     Some(idx) => return row[idx].starts_with(val),
                     None => {
-                        eprintln!("no field named {}", self.field_name);
+                        log_error!("no field named {}", self.field_name);
                         return false;
                     }
                 },
@@ -371,20 +387,21 @@ impl Comparison {
                         Some(idx1) => match fields.iter().position(|f| f == field_name) {
                             Some(idx2) => return row[idx1].starts_with(&row[idx2]),
                             None => {
-                                eprintln!("no field named {}", self.field_name);
+                                log_error!("no field named {}", self.field_name);
                                 return false;
                             }
                         },
                         None => {
-                            eprintln!("no field named {}", self.field_name);
+                            log_error!("no field named {}", self.field_name);
                             return false;
                         }
                     }
                 }
                 _ => {
-                    eprintln!(
+                    log_error!(
                         "the value {} can not be compared to the value at field '{}'",
-                        self.rhs, self.field_name
+                        self.rhs,
+                        self.field_name
                     );
                     return false;
                 }
@@ -393,7 +410,7 @@ impl Comparison {
                 Value::Literal(val) => match fields.iter().position(|f| *f == self.field_name) {
                     Some(idx) => return row[idx].ends_with(val),
                     None => {
-                        eprintln!("no field named {}", self.field_name);
+                        log_error!("no field named {}", self.field_name);
                         return false;
                     }
                 },
@@ -402,20 +419,21 @@ impl Comparison {
                         Some(idx1) => match fields.iter().position(|f| f == field_name) {
                             Some(idx2) => return row[idx1].ends_with(&row[idx2]),
                             None => {
-                                eprintln!("no field named {}", self.field_name);
+                                log_error!("no field named {}", self.field_name);
                                 return false;
                             }
                         },
                         None => {
-                            eprintln!("no field named {}", self.field_name);
+                            log_error!("no field named {}", self.field_name);
                             return false;
                         }
                     }
                 }
                 _ => {
-                    eprintln!(
+                    log_error!(
                         "the value {} can not be compared to the value at field '{}'",
-                        self.rhs, self.field_name
+                        self.rhs,
+                        self.field_name
                     );
                     return false;
                 }
@@ -480,14 +498,14 @@ impl Comparison {
         match fields.iter().position(|f| *f == self.field_name) {
             Some(idx) => lhs_idx = idx,
             None => {
-                eprintln!("no field named {}", self.field_name);
+                log_error!("no field named {}", self.field_name);
                 return None;
             }
         }
         match fields.iter().position(|f| f == field) {
             Some(idx) => rhs_idx = idx,
             None => {
-                eprintln!("no field named {}", self.field_name);
+                log_error!("no field named {}", self.field_name);
                 return None;
             }
         }
@@ -497,7 +515,7 @@ impl Comparison {
         match row[lhs_idx].parse::<f32>() {
             Ok(val) => lhs = val,
             Err(_) => {
-                eprintln!(
+                log_error!(
                     "{} is not a numerical value it has been evaluated as infinity",
                     row[lhs_idx]
                 );
@@ -507,7 +525,7 @@ impl Comparison {
         match row[rhs_idx].parse::<f32>() {
             Ok(val) => rhs = val,
             Err(_) => {
-                eprintln!(
+                log_error!(
                     "{} is not a numerical value it has been evaluated as infinity",
                     row[rhs_idx]
                 );
@@ -533,7 +551,7 @@ impl Comparison {
         match fields.iter().position(|f| *f == self.field_name) {
             Some(idx) => field_idx = idx,
             None => {
-                eprintln!("no field named {}", self.field_name);
+                log_error!("no field named {}", self.field_name);
                 return None;
             }
         }
@@ -541,7 +559,7 @@ impl Comparison {
         match row[field_idx].parse::<f32>() {
             Ok(val) => field_val = val,
             Err(_) => {
-                eprintln!(
+                log_error!(
                     "{} is not a numerical value it has been evaluated as infinity",
                     row[field_idx]
                 );

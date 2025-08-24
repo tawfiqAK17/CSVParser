@@ -1,3 +1,6 @@
+use crate::log_error;
+use crate::log_warning;
+use crate::log_info;
 use crate::{OPTIONS, Options};
 
 use super::query_engine;
@@ -37,21 +40,21 @@ pub fn run(path: &str) {
                                     Ok(mut f) => {
                                         // write the fields names
                                         if let Err(e) = writeln!(f, "{}", fields.join(",")) {
-                                            eprintln!("Failed to write to file: {}", e);
+                                            log_error!("Failed to write to file: {}", e);
                                             continue;
                                         }
                                         // write the rest of the rows
                                         for line in rows.iter() {
                                             if let Err(e) = writeln!(f, "{}", line.join(",")) {
-                                                eprintln!("Failed to write to file: {}", e);
+                                                log_error!("Failed to write to file: {}", e);
                                                 continue;
                                             }
                                         }
-                                        println!("the changes has been written to: {}", path);
+                                        log_info!("the changes has been written to: {}", path);
                                         return;
                                     }
                                     Err(e) => {
-                                        eprintln!("Failed to create file: {}", e);
+                                        log_error!("Failed to create file: {}", e);
                                         continue;
                                     }
                                 }
@@ -66,7 +69,7 @@ pub fn run(path: &str) {
                             }
                         },
                         Err(_) => {
-                            eprintln!("failed to read your choice");
+                            log_error!("failed to read your choice");
                         }
                     }
                 }
@@ -74,7 +77,7 @@ pub fn run(path: &str) {
                 println!();
             }
             Err(_) => {
-                eprintln!("failed to read your command, please try again");
+                log_error!("failed to read your command, please try again");
             }
         }
     }
@@ -85,7 +88,7 @@ pub fn parse_file(path: &str) -> Option<(Vec<String>, Vec<Vec<String>>)> {
     match file_result {
         Ok(val) => file = val,
         Err(_) => {
-            eprintln!("can not open the file {path}");
+            log_error!("can not open the file {path}");
             return None;
         }
     }
@@ -104,13 +107,13 @@ pub fn parse_file(path: &str) -> Option<(Vec<String>, Vec<Vec<String>>)> {
     let mut fields: Vec<String> = Vec::new();
 
     let mut rows: Vec<Vec<String>> = Vec::new();
-    println!("loading the csv file...");
+    log_info!("loading the csv file...");
     for line in reader.lines() {
         let mut line_content = String::new();
         match line {
             Ok(content) => line_content.push_str(&content),
             Err(_) => {
-                eprintln!("an error accord while loading the file {path}");
+                log_error!("an error accord while loading the file {path}");
                 return None;
             }
         }
@@ -124,7 +127,7 @@ pub fn parse_file(path: &str) -> Option<(Vec<String>, Vec<Vec<String>>)> {
             for val in fields_vals {
                 let field = val.trim().to_string();
                 if field.is_empty() {
-                    eprintln!("the name of a field should not be empty");
+                    log_error!("the name of a field should not be empty");
                     return None;
                 }
                 fields.push(val.trim().to_string());
@@ -134,13 +137,13 @@ pub fn parse_file(path: &str) -> Option<(Vec<String>, Vec<Vec<String>>)> {
 
         let line_vals: Vec<&str> = line_content.split(separator.as_str()).collect();
         if line_vals.len() != fields.len() {
-            println!(
+            log_warning!(
                 "the line {} contains {} value, but there is {} field name",
                 line_content,
                 line_vals.len(),
                 fields.len()
             );
-            println!("the line will be ignored");
+            log_warning!("the line will be ignored");
             continue;
         }
         let mut row: Vec<String> = Vec::new();
@@ -149,7 +152,7 @@ pub fn parse_file(path: &str) -> Option<(Vec<String>, Vec<Vec<String>>)> {
             // if the value of the field is empty
             if val.is_empty() {
                 let mut new_val = String::new();
-                println!("the value of the field {} is empty at line", fields[i]);
+                log_warning!("the value of the field {} is empty at line:", fields[i]);
                 println!("->: {line_content}");
                 println!(
                     "do you want to insert it here (enter the value to inset or press Return to escape):"
@@ -159,7 +162,7 @@ pub fn parse_file(path: &str) -> Option<(Vec<String>, Vec<Vec<String>>)> {
                         new_val = new_val.trim().to_string();
                         // the user pressed Return
                         if new_val.is_empty() {
-                            println!(
+                            log_warning!(
                                 "this line would not be considered and will be removed when you save the file"
                             );
                             row.clear();
@@ -169,7 +172,7 @@ pub fn parse_file(path: &str) -> Option<(Vec<String>, Vec<Vec<String>>)> {
                         row.push(new_val);
                     }
                     Err(_) => {
-                        eprintln!("there was an error while reading the new value try again");
+                        log_error!("there was an error while reading the new value try again");
                         i -= 1;
                         continue;
                     }

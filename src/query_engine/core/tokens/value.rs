@@ -5,7 +5,6 @@ pub enum Value {
     Literal(String),
     FieldName(String),
     Number(f32),
-    Boolean(bool),
     List(List),
     None,
 }
@@ -16,7 +15,6 @@ impl Display for Value {
             Value::Literal(val) => write!(f, "{val}"),
             Value::FieldName(val) => write!(f, "{val}"),
             Value::Number(val) => write!(f, "{val}"),
-            Value::Boolean(val) => write!(f, "{val}"),
             Value::List(_) => write!(f, "list"),
             Value::None => write!(f, ""),
         }
@@ -47,13 +45,4 @@ pub fn parse_number(lexeme: &String) -> Option<f32> {
         Ok(val) => return Some(val),
         Err(_) => return None,
     }
-}
-pub fn parse_boolean(lexeme: &String) -> Option<bool> {
-    if lexeme == "true" {
-        return Some(true);
-    }
-    if lexeme == "false" {
-        return Some(false);
-    }
-    None
 }

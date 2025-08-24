@@ -1,4 +1,5 @@
 use super::ParseResult;
+use crate::log_error;
 use super::assign_list::AssignList;
 use super::where_clause::WhereClause;
 
@@ -42,7 +43,7 @@ impl SetQuery {
                                 }
                                 ParseResult::None => {
                                     println!("none");
-                                    eprintln!(
+                                    log_error!(
                                         "expecting a where clause or an assign list after the set key word"
                                     );
                                     return ParseResult::Err;
@@ -53,13 +54,13 @@ impl SetQuery {
                                 }
                             }
                         } else {
-                            eprintln!(
+                            log_error!(
                                 "missing a 'to' key word at the beginning of the assigning list"
                             );
                             return ParseResult::Err;
                         }
                     } else {
-                        eprintln!("expecting an assigning list for the set command");
+                        log_error!("expecting an assigning list for the set command");
                         return ParseResult::Err;
                     }
                 } else if *lexeme == "to" { // the case where there is only the assigning list
@@ -73,7 +74,7 @@ impl SetQuery {
                             });
                         }
                         ParseResult::None => {
-                            eprintln!(
+                            log_error!(
                                 "expecting a where clause or an assign list after the set key word"
                             );
                             return ParseResult::Err;
@@ -83,12 +84,12 @@ impl SetQuery {
                         }
                     }
                 } else {
-                    eprintln!("expecting a where clause or an assign list after the set key word");
+                    log_error!("expecting a where clause or an assign list after the set key word");
                     return ParseResult::Err;
                 }
             }
             None => {
-                eprintln!("expecting a where clause or an assign list after the set key word");
+                log_error!("expecting a where clause or an assign list after the set key word");
                 return ParseResult::Err;
             }
         }

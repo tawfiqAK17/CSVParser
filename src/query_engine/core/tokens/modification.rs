@@ -1,4 +1,5 @@
 use super::ParseResult;
+use crate::log_error;
 use super::value;
 use super::value::Value;
 
@@ -65,7 +66,7 @@ impl Modification {
                     lhs = Value::Literal(literal);
                 } else {
                     return {
-                        eprintln!("{lexeme1} is not a valid value to be modified");
+                        log_error!("{lexeme1} is not a valid value to be modified");
                         return (ParseResult::Err, idx);
                     };
                 }
@@ -84,7 +85,7 @@ impl Modification {
                                     } else if let Some(literal) = value::parse_literal(lexeme3) {
                                         rhs = Some(Value::Literal(literal));
                                     } else {
-                                        eprintln!("{lexeme3} is not a valid value to be modified");
+                                        log_error!("{lexeme3} is not a valid value to be modified");
                                         return (ParseResult::Err, idx);
                                     }
                                     return (
@@ -94,7 +95,7 @@ impl Modification {
                                 }
                                 None => {
                                     // the rhs was not provided
-                                    eprintln!(
+                                    log_error!(
                                         "the modifier {lexeme2} require a right hand side value"
                                     );
                                     return (ParseResult::Err, idx);
@@ -154,7 +155,7 @@ impl Modification {
                                 Some(idx) => match row[idx].parse::<f32>() {
                                     Ok(val) => lhs = val,
                                     Err(_) => {
-                                        eprintln!(
+                                        log_error!(
                                             "the value {} of the field {} is not numerical",
                                             row[idx], field_name
                                         );
@@ -162,13 +163,13 @@ impl Modification {
                                     }
                                 },
                                 None => {
-                                    eprintln!("no field named {}", field_name);
+                                    log_error!("no field named {}", field_name);
                                     return None;
                                 }
                             }
                         }
                         _ => {
-                            eprintln!(
+                            log_error!(
                                 "an arithmetic operator can not be applied to a non numeric value"
                             );
                             return None;
@@ -183,7 +184,7 @@ impl Modification {
                                     Some(idx) => match row[idx].parse::<f32>() {
                                         Ok(val) => rhs = val,
                                         Err(_) => {
-                                            eprintln!(
+                                            log_error!(
                                                 "the value {} of {} is not numerical",
                                                 row[idx], field_name
                                             );
@@ -191,20 +192,20 @@ impl Modification {
                                         }
                                     },
                                     None => {
-                                        eprintln!("no field named {}", field_name);
+                                        log_error!("no field named {}", field_name);
                                         return None;
                                     }
                                 }
                             }
                             _ => {
-                                eprintln!(
+                                log_error!(
                                     "an arithmetic operator can not be applied to a non numeric value"
                                 );
                                 return None;
                             }
                         },
                         None => {
-                            eprintln!("expecting a rhs value after the arithmetic operator");
+                            log_error!("expecting a rhs value after the arithmetic operator");
                             return None;
                         }
                     }
@@ -214,7 +215,7 @@ impl Modification {
                         ArithmeticModifier::Multiply => return Some((lhs * rhs).to_string()),
                         ArithmeticModifier::Divide => {
                             if rhs == 0f32 {
-                                eprintln!("can not divide by 0");
+                                log_error!("can not divide by 0");
                                 return Some(lhs.to_string());
                             }
                             return Some((lhs / rhs).to_string());
@@ -233,13 +234,13 @@ impl Modification {
                             match fields.iter().position(|f| f == field_name) {
                                 Some(idx) => lhs = row[idx].clone(),
                                 None => {
-                                    eprintln!("no field named {}", field_name);
+                                    log_error!("no field named {}", field_name);
                                     return None;
                                 }
                             }
                         }
                         _ => {
-                            eprintln!(
+                            log_error!(
                                 "a string operator can not be applied to a non numeric value"
                             );
                             return None;
@@ -253,13 +254,13 @@ impl Modification {
                                 match fields.iter().position(|f| f == field_name) {
                                     Some(idx) => rhs = Some(row[idx].clone()),
                                     None => {
-                                        eprintln!("no field named {}", field_name);
+                                        log_error!("no field named {}", field_name);
                                         return None;
                                     }
                                 }
                             }
                             _ => {
-                                eprintln!(
+                                log_error!(
                                     "a string operator can not be applied to a value that is not a string"
                                 );
                                 return None;
@@ -278,7 +279,7 @@ impl Modification {
                             StringModifier::ToUpperCase => return Some(lhs.to_uppercase()),
                             StringModifier::ToLowerCase => return Some(lhs.to_lowercase()),
                             _ => {
-                                eprintln!("messing the rhs for the modifier");
+                                log_error!("messing the rhs for the modifier");
                                 return None;
                             }
                         },
@@ -290,14 +291,14 @@ impl Modification {
                 Value::FieldName(val) => match fields.iter().position(|f| f == val) {
                     Some(idx) => return Some(row[idx].clone()),
                     None => {
-                        eprintln!("no field named {}", val);
+                        log_error!("no field named {}", val);
                         return None;
                     }
                 },
                 Value::Literal(val) => return Some(val.clone()),
                 Value::Number(val) => return Some(val.to_string()),
                 _ => {
-                    eprintln!("the value {} can not be assigned to a field", self.lhs);
+                    log_error!("the value {} can not be assigned to a field", self.lhs);
                     return None;
                 }
             },

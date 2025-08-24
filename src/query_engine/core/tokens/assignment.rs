@@ -1,6 +1,7 @@
 use super::ParseResult;
 use super::modification::Modification;
 use super::value;
+use crate::log_error;
 
 #[derive(Debug)]
 pub struct Assignment {
@@ -29,24 +30,24 @@ impl Assignment {
                                         );
                                     }
                                     ParseResult::None => {
-                                        eprintln!("expecting a modification after the = key word");
+                                        log_error!("expecting a modification after the = key word");
                                         return (ParseResult::Err, idx);
                                     }
                                     ParseResult::Err => return (ParseResult::Err, idx),
                                 }
                             }
                             _ => {
-                                eprintln!("expecting a = after the field name {field_name}");
+                                log_error!("expecting a = after the field name {field_name}");
                                 return (ParseResult::Err, idx);
                             }
                         },
                         None => {
-                            eprintln!("expecting a = after the field name {field_name}");
+                            log_error!("expecting a = after the field name {field_name}");
                             return (ParseResult::Err, idx);
                         }
                     }
                 } else {
-                    eprintln!("expecting the name of the field which will be modified");
+                    log_error!("expecting the name of the field which will be modified");
                     return (ParseResult::Err, idx);
                 }
             }
@@ -60,7 +61,7 @@ impl Assignment {
                 None => {}
             },
             None => {
-                eprintln!("no field named {}", self.field_name);
+                log_error!("no field named {}", self.field_name);
             }
         }
     }

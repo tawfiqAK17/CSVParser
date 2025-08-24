@@ -1,5 +1,6 @@
 use super::ParseResult;
 use super::function_call::FunctionCall;
+use crate::log_error;
 use super::value;
 use super::where_clause::WhereClause;
 use crate::OPTIONS;
@@ -54,12 +55,12 @@ impl GetQuery {
                         ParseResult::Err => return ParseResult::Err,
                     }
                 } else {
-                    eprintln!("a selector was expected for the get command");
+                    log_error!("a selector was expected for the get command");
                     return ParseResult::Err;
                 }
             }
             None => {
-                eprintln!("a selector was expected for the get command");
+                log_error!("a selector was expected for the get command");
                 return ParseResult::Err;
             }
         }
@@ -157,7 +158,7 @@ impl GetQuery {
             match fields.iter().position(|f| f == selector) {
                 Some(idx) => idxs.push(idx),
                 None => {
-                    eprintln!("no field named {}", selector);
+                    log_error!("no field named {}", selector);
                     return;
                 }
             }

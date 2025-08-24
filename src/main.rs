@@ -19,7 +19,7 @@ fn main() {
 
     let args: Vec<String> = env::args().collect();
     if args.len() < 2 {
-        eprintln!("usage: JCParser -file_type [options] file");
+        log_error!("usage: JCParser -file_type [options] file");
         exit(1);
     }
 
@@ -35,7 +35,7 @@ fn main() {
                         options.insert(Options::FieldsSeparator, op[2..].to_string())
                     }
                     _ => {
-                        eprintln!("invalid option {}", option);
+                        log_error!("invalid option {}", option);
                         return;
                     }
                 };
@@ -45,7 +45,7 @@ fn main() {
         }
         "-json" => println!("loading the json file..."),
         _ => {
-            eprintln!("unknown file type {}", args[1]);
+            log_error!("unknown file type {}", args[1]);
             exit(2);
         }
     }

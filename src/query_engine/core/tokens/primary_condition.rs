@@ -1,5 +1,6 @@
 use super::ParseResult;
 use super::comparison::Comparison;
+use crate::log_error;
 use super::condition::Condition;
 
 #[derive(Debug)]
@@ -28,17 +29,17 @@ impl PrimaryCondition {
                                         last_idx + 1,
                                     );
                                 } else {
-                                    eprintln!("missing a ')' after the condition");
+                                    log_error!("missing a ')' after the condition");
                                     return (ParseResult::Err, last_idx);
                                 }
                             }
                             None => {
-                                eprintln!("missing a ')' after the condition");
+                                log_error!("missing a ')' after the condition");
                                 return (ParseResult::Err, last_idx);
                             }
                         },
                         ParseResult::None => {
-                            eprintln!("missing a condition after the '('");
+                            log_error!("missing a condition after the '('");
                             return (ParseResult::Err, last_idx);
                         }
                         ParseResult::Err => {
