@@ -136,10 +136,7 @@ impl Comparison {
                         "contains" => comparison_op = ComparisonOps::Contains,
                         "starts-with" => comparison_op = ComparisonOps::StartsWith,
                         "ends-with" => comparison_op = ComparisonOps::EndsWith,
-                        "in" => {
-                            log_error!("the in operator is not implemented yet");
-                            return (ParseResult::Err, idx);
-                        }
+                        "in" => comparison_op = ComparisonOps::In,
                         _ => {
                             log_error!("expecting a comparison operator after the field name");
                             return (ParseResult::None, idx);
@@ -155,6 +152,9 @@ impl Comparison {
                             rhs = Value::FieldName(field_name);
                         } else if let Some(number) = value::parse_number(lexeme) {
                             rhs = Value::Number(number);
+                        } else if let Some((list, last_idx)) = value::parse_list(lexemes, idx) {
+                            rhs = Value::List(list);
+                            idx = last_idx;
                         } else {
                             log_error!(
                                 "{} can not be considered as a valid value to compare to",
@@ -438,7 +438,19 @@ impl Comparison {
                     return false;
                 }
             },
-            ComparisonOps::In => todo!(),
+            ComparisonOps::In => match &self.rhs {
+                Value::List(list) => match fields.iter().position(|f| *f == self.field_name) {
+                    Some(idx) => return list.contains(&row[idx]),
+                    None => {
+                        log_error!("no field named {}", self.field_name);
+                        return false;
+                    }
+                },
+                _ => {
+                    log_error!("the value after the in operator should be a list");
+                    return false;
+                }
+            },
         }
     }
     fn greater_than_or_equal(
@@ -795,36 +807,31 @@ mod string_comparison_tests {
     }
 
     #[test]
-    // fn test_in_operator() {
-    //     let (fields, row) = get_test_data();
+    fn test_in_operator() {
+        let (fields, row) = get_test_data();
 
-    //     // Value in list
-    //     let comparison = Comparison {
-    //         field_name: "department".to_string(),
-    //         comparison_op: ComparisonOps::In,
-    //         rhs: Value::List(List {
-    //             values: vec![
-    //                 Value::Literal("HR".to_string()),
-    //                 Value::Literal("Engineering".to_string()),
-    //                 Value::Literal("Finance".to_string())
-    //             ]
-    //         })
-    //     };
-    //     assert!(comparison.evaluate(&fields, &row));
+        // Value in list of strings
+        let comparison = Comparison {
+            field_name: "department".to_string(),
+            comparison_op: ComparisonOps::In,
+            rhs: Value::List(vec![
+                "HR".to_string(),
+                "Engineering".to_string(),
+                "Finance".to_string(),
+            ]),
+        };
+        assert!(comparison.evaluate(&fields, &row));
 
-    //     // Field value in other fields
-    //     let comparison = Comparison {
-    //         field_name: "name".to_string(),
-    //         comparison_op: ComparisonOps::In,
-    //         rhs: Value::List(List {
-    //             values: vec![
-    //                 Value::FieldName("department".to_string()),
-    //                 Value::FieldName("email".to_string())
-    //             ]
-    //         })
-    //     };
-    //     assert!(comparison.evaluate(&fields, &row)); // "John Doe" in email
-    // }
+        let comparison = Comparison {
+            field_name: "name".to_string(),
+            comparison_op: ComparisonOps::In,
+            rhs: Value::List(vec![
+                "Engineering".to_string(),          // department value
+                "john.doe@example.com".to_string(), // email value
+            ]),
+        };
+        assert!(!comparison.evaluate(&fields, &row)); // "John Doe" not in the list
+    }
     #[test]
     fn test_starts_with_operator() {
         let (fields, row) = get_test_data();
