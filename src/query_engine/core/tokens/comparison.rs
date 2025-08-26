@@ -139,7 +139,7 @@ impl Comparison {
                         "in" => comparison_op = ComparisonOps::In,
                         _ => {
                             log_error!("expecting a comparison operator after the field name");
-                            return (ParseResult::None, idx);
+                            return (ParseResult::Err, idx);
                         }
                     }
                     idx += 1;
@@ -147,7 +147,11 @@ impl Comparison {
                         // the third lexeme is the rhs which can be a literal a field name or a
                         // number
                         if let Some(literal) = value::parse_literal(lexeme) {
-                            rhs = Value::Literal(literal);
+                            if literal.is_empty() {
+                                rhs = Value::None;
+                            } else {
+                                rhs = Value::Literal(literal);
+                            }
                         } else if let Some(field_name) = value::parse_field_name(lexeme) {
                             rhs = Value::FieldName(field_name);
                         } else if let Some(number) = value::parse_number(lexeme) {
@@ -160,7 +164,7 @@ impl Comparison {
                                 "{} can not be considered as a valid value to compare to",
                                 lexeme
                             );
-                            return (ParseResult::None, idx);
+                            return (ParseResult::Err, idx);
                         }
                         return (
                             ParseResult::Val(Comparison {
@@ -191,40 +195,9 @@ impl Comparison {
     }
     pub fn evaluate(&self, fields: &Vec<String>, row: &Vec<String>) -> bool {
         match &self.comparison_op {
-            ComparisonOps::Equal => match &self.rhs {
-                Value::FieldName(field) => match self.n_compaire_to_field(field, fields, row) {
-                    Some(order) => match order {
-                        Ordering::Equal => return true,
-                        _ => return false,
-                    },
-                    None => return false,
-                },
-                Value::Number(val) => match self.compaire_to_number(val.clone(), fields, row) {
-                    Some(order) => match order {
-                        Ordering::Equal => return true,
-                        _ => return false,
-                    },
-                    None => return false,
-                },
-                _ => todo!(),
-            },
-            ComparisonOps::NotEqual => match &self.rhs {
-                Value::FieldName(field) => match self.n_compaire_to_field(field, fields, row) {
-                    Some(order) => match order {
-                        Ordering::Equal => return false,
-                        _ => return true,
-                    },
-                    None => return false,
-                },
-                Value::Number(val) => match self.compaire_to_number(val.clone(), fields, row) {
-                    Some(order) => match order {
-                        Ordering::Equal => return false,
-                        _ => return true,
-                    },
-                    None => return false,
-                },
-                _ => todo!(),
-            },
+            ComparisonOps::Equal => return self.equal(fields, row),
+            ComparisonOps::NotEqual => return !self.equal(fields, row),
+
             ComparisonOps::LessThan => match &self.rhs {
                 Value::FieldName(field) => match self.n_compaire_to_field(field, fields, row) {
                     Some(order) => match order {
@@ -240,6 +213,7 @@ impl Comparison {
                     },
                     None => return false,
                 },
+                Value::None => return false,
                 _ => todo!(),
             },
 
@@ -258,6 +232,9 @@ impl Comparison {
                     },
                     None => return false,
                 },
+
+                Value::None => return false,
+
                 _ => todo!(),
             },
 
@@ -296,6 +273,7 @@ impl Comparison {
                         }
                     }
                 }
+                Value::None => return self.is_none(fields, row),
 
                 _ => {
                     log_error!(
@@ -332,6 +310,7 @@ impl Comparison {
                     }
                 }
 
+                Value::None => return !self.is_none(fields, row),
                 _ => {
                     log_error!(
                         "the value {} can not be compared to the value at field '{}'",
@@ -453,6 +432,35 @@ impl Comparison {
             },
         }
     }
+    fn equal(&self, fields: &Vec<String>, row: &Vec<String>) -> bool {
+        match &self.rhs {
+            Value::FieldName(field) => match self.n_compaire_to_field(field, fields, row) {
+                Some(order) => match order {
+                    Ordering::Equal => return true,
+                    _ => return false,
+                },
+                None => return false,
+            },
+            Value::Number(val) => match self.compaire_to_number(val.clone(), fields, row) {
+                Some(order) => match order {
+                    Ordering::Equal => return true,
+                    _ => return false,
+                },
+                None => return false,
+            },
+            Value::None => self.is_none(fields, row),
+            _ => todo!(),
+        }
+    }
+    fn is_none(&self, fields: &Vec<String>, row: &Vec<String>) -> bool {
+        match fields.iter().position(|f| *f == self.field_name) {
+            Some(idx) => return row[idx] == "",
+            None => {
+                log_error!("no field named {}", self.field_name);
+                return false;
+            }
+        }
+    }
     fn greater_than_or_equal(
         &self,
         value: &Value,
@@ -474,8 +482,9 @@ impl Comparison {
                 },
                 None => return false,
             },
+            Value::None => return false,
             _ => unreachable!(
-                "the value passed to 'greater_than_or_equal' function can only be a number of a field name"
+                "the value passed to 'greater_than_or_equal' function can only be a number or a field name"
             ),
         }
     }
@@ -495,6 +504,7 @@ impl Comparison {
                 },
                 None => return false,
             },
+            Value::None => return false,
             _ => todo!(),
         }
     }
@@ -521,26 +531,17 @@ impl Comparison {
                 return None;
             }
         }
-
         let lhs: f32;
         let rhs: f32;
         match row[lhs_idx].parse::<f32>() {
             Ok(val) => lhs = val,
             Err(_) => {
-                log_error!(
-                    "{} is not a numerical value it has been evaluated as infinity",
-                    row[lhs_idx]
-                );
                 return None;
             }
         }
         match row[rhs_idx].parse::<f32>() {
             Ok(val) => rhs = val,
             Err(_) => {
-                log_error!(
-                    "{} is not a numerical value it has been evaluated as infinity",
-                    row[rhs_idx]
-                );
                 return None;
             }
         }

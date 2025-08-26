@@ -47,7 +47,7 @@ impl Function {
                                     idx + 1,
                                 );
                             }
-                            "reverse-sort" => {
+                            "rsort" => {
                                 return (
                                     ParseResult::Val(Function {
                                         function_name: Functions::ReverseSort(field_name),
@@ -63,7 +63,7 @@ impl Function {
                                     idx + 1,
                                 );
                             }
-                            "reverse-nsort" => {
+                            "nrsort" => {
                                 return (
                                     ParseResult::Val(Function {
                                         function_name: Functions::ReverseNSort(field_name),
@@ -214,14 +214,12 @@ impl Function {
         match a.parse::<f32>() {
             Ok(val) => lhs = val,
             Err(_) => {
-                log_error!("\"{a}\" is not a numerical value it has been evaluated as infinity");
                 return Ordering::Greater;
             }
         }
         match b.parse::<f32>() {
             Ok(val) => rhs = val,
             Err(_) => {
-                log_error!("\"{b}\" is not a numerical value it has been evaluated as infinity");
                 return Ordering::Less;
             }
         }
