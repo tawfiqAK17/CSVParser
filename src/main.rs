@@ -43,7 +43,7 @@ fn main() {
             let _ = OPTIONS.set(options);
             csv_parser::run(args[args.len() - 1].as_str());
         }
-        "-json" => println!("loading the json file..."),
+        "-json" => println!("not available yet"),
         _ => {
             log_error!("unknown file type {}", args[1]);
             exit(2);
