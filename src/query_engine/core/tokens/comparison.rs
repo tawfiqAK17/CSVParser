@@ -2,7 +2,7 @@ use super::ParseResult;
 use super::value;
 use super::value::Value;
 use crate::log_error;
-use crate::log_info;
+use std::io::SeekFrom;
 use std::{cmp::Ordering, fmt::Display};
 
 #[derive(Debug)]
@@ -24,19 +24,19 @@ pub enum ComparisonOps {
 impl Display for ComparisonOps {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            ComparisonOps::Equal => eprint!("=="),
-            ComparisonOps::NotEqual => eprint!("!="),
-            ComparisonOps::LessThan => eprint!("<"),
-            ComparisonOps::GreaterThan => eprint!(">"),
-            ComparisonOps::LessThanOrEqual => eprint!("<="),
-            ComparisonOps::GreaterThanOrEqual => eprint!(">="),
-            ComparisonOps::BetweenOp(_, _) => eprint!("between"),
-            ComparisonOps::Is => eprint!("is"),
-            ComparisonOps::IsNot => eprint!("isnot"),
-            ComparisonOps::Contains => eprint!("contains"),
-            ComparisonOps::In => eprint!("in"),
-            ComparisonOps::StartsWith => eprint!("starts-with"),
-            ComparisonOps::EndsWith => eprint!("ends-with"),
+            ComparisonOps::Equal => write!(f, "==")?,
+            ComparisonOps::NotEqual => write!(f, "!=")?,
+            ComparisonOps::LessThan => write!(f, "<")?,
+            ComparisonOps::GreaterThan => write!(f, ">")?,
+            ComparisonOps::LessThanOrEqual => write!(f, "<=")?,
+            ComparisonOps::GreaterThanOrEqual => write!(f, ">=")?,
+            ComparisonOps::BetweenOp(_, _) => write!(f, "between")?,
+            ComparisonOps::Is => write!(f, "is")?,
+            ComparisonOps::IsNot => write!(f, "isnot")?,
+            ComparisonOps::Contains => write!(f, "contains")?,
+            ComparisonOps::In => write!(f, "in")?,
+            ComparisonOps::StartsWith => write!(f, "starts-with")?,
+            ComparisonOps::EndsWith => write!(f, "ends-with")?,
         }
         Ok(())
     }
@@ -195,228 +195,33 @@ impl Comparison {
     }
     pub fn evaluate(&self, fields: &Vec<String>, row: &Vec<String>) -> bool {
         match &self.comparison_op {
-            ComparisonOps::Equal => return self.equal(fields, row),
-            ComparisonOps::NotEqual => return !self.equal(fields, row),
-
-            ComparisonOps::LessThan => match &self.rhs {
-                Value::FieldName(field) => match self.n_compaire_to_field(field, fields, row) {
-                    Some(order) => match order {
-                        Ordering::Less => return true,
-                        _ => return false,
-                    },
-                    None => return false,
-                },
-                Value::Number(val) => match self.compaire_to_number(val.clone(), fields, row) {
-                    Some(order) => match order {
-                        Ordering::Less => return true,
-                        _ => return false,
-                    },
-                    None => return false,
-                },
-                Value::None => return false,
-                _ => todo!(),
-            },
-
-            ComparisonOps::GreaterThan => match &self.rhs {
-                Value::FieldName(field) => match self.n_compaire_to_field(field, fields, row) {
-                    Some(order) => match order {
-                        Ordering::Greater => return true,
-                        _ => return false,
-                    },
-                    None => return false,
-                },
-                Value::Number(val) => match self.compaire_to_number(val.clone(), fields, row) {
-                    Some(order) => match order {
-                        Ordering::Greater => return true,
-                        _ => return false,
-                    },
-                    None => return false,
-                },
-
-                Value::None => return false,
-
-                _ => todo!(),
-            },
-
+            ComparisonOps::Equal => return self.equal(&self.rhs, fields, row),
+            ComparisonOps::NotEqual => return !self.equal(&self.rhs, fields, row),
+            ComparisonOps::LessThan => return self.less_than(&self.rhs, fields, row),
+            ComparisonOps::GreaterThan => return self.greater_than(&self.rhs, fields, row),
             ComparisonOps::LessThanOrEqual => {
-                return self.less_than_or_equal(&self.rhs, fields, row);
+                return self.less_than(&self.rhs, fields, row)
+                    || self.equal(&self.rhs, fields, row);
             }
             ComparisonOps::GreaterThanOrEqual => {
-                return self.greater_than_or_equal(&self.rhs, fields, row);
+                return self.greater_than(&self.rhs, fields, row)
+                    || self.equal(&self.rhs, fields, row);
             }
             ComparisonOps::BetweenOp(val1, val2) => {
-                return self.greater_than_or_equal(val1, fields, row)
-                    && self.less_than_or_equal(val2, &fields, row);
+                return (self.greater_than(val1, fields, row) || self.equal(val1, fields, row))
+                    && (self.less_than(val2, fields, row) || self.equal(val2, fields, row));
             }
-            ComparisonOps::Is => match &self.rhs {
-                Value::Literal(val) => match fields.iter().position(|f| *f == self.field_name) {
-                    Some(idx) => return *row[idx] == val.to_string(),
-                    None => {
-                        log_error!("no field named {}", self.field_name);
-                        return false;
-                    }
-                },
-                Value::FieldName(field_name) => {
-                    match fields.iter().position(|f| *f == self.field_name) {
-                        Some(idx1) => match fields.iter().position(|f| *f == *field_name) {
-                            Some(idx2) => {
-                                return row[idx1] == row[idx2];
-                            }
-                            None => {
-                                log_error!("no field named {}", field_name);
-                                return false;
-                            }
-                        },
-                        None => {
-                            log_error!("no field named {}", self.field_name);
-                            return false;
-                        }
-                    }
-                }
-                Value::None => return self.is_none(fields, row),
-
-                _ => {
-                    log_error!(
-                        "the value {} can not be compared to the value at field '{}'",
-                        self.rhs,
-                        self.field_name
-                    );
-                    return false;
-                }
-            },
-            ComparisonOps::IsNot => match &self.rhs {
-                Value::Literal(val) => match fields.iter().position(|f| *f == self.field_name) {
-                    Some(idx) => return *row[idx] != *val,
-                    None => {
-                        log_error!("no field named {}", self.field_name);
-                        return false;
-                    }
-                },
-                Value::FieldName(field_name) => {
-                    match fields.iter().position(|f| *f == self.field_name) {
-                        Some(idx1) => match fields.iter().position(|f| f == field_name) {
-                            Some(idx2) => {
-                                return row[idx1] != row[idx2];
-                            }
-                            None => {
-                                log_error!("no field named {}", field_name);
-                                return false;
-                            }
-                        },
-                        None => {
-                            log_error!("no field named {}", self.field_name);
-                            return false;
-                        }
-                    }
-                }
-
-                Value::None => return !self.is_none(fields, row),
-                _ => {
-                    log_error!(
-                        "the value {} can not be compared to the value at field '{}'",
-                        self.rhs,
-                        self.field_name
-                    );
-                    return false;
-                }
-            },
-
-            ComparisonOps::Contains => match &self.rhs {
-                Value::Literal(val) => match fields.iter().position(|f| *f == self.field_name) {
-                    Some(idx) => return row[idx].contains(val),
-                    None => {
-                        log_error!("no field named {}", self.field_name);
-                        return false;
-                    }
-                },
-                Value::FieldName(field_name) => {
-                    match fields.iter().position(|f| *f == self.field_name) {
-                        Some(idx1) => match fields.iter().position(|f| f == field_name) {
-                            Some(idx2) => return row[idx1].contains(&row[idx2]),
-                            None => {
-                                log_error!("no field named {}", self.field_name);
-                                return false;
-                            }
-                        },
-                        None => {
-                            log_error!("no field named {}", self.field_name);
-                            return false;
-                        }
-                    }
-                }
-                _ => {
-                    log_error!(
-                        "the value {} can not be compared to the value at field '{}'",
-                        self.rhs,
-                        self.field_name
-                    );
-                    return false;
-                }
-            },
-            ComparisonOps::StartsWith => match &self.rhs {
-                Value::Literal(val) => match fields.iter().position(|f| *f == self.field_name) {
-                    Some(idx) => return row[idx].starts_with(val),
-                    None => {
-                        log_error!("no field named {}", self.field_name);
-                        return false;
-                    }
-                },
-                Value::FieldName(field_name) => {
-                    match fields.iter().position(|f| *f == self.field_name) {
-                        Some(idx1) => match fields.iter().position(|f| f == field_name) {
-                            Some(idx2) => return row[idx1].starts_with(&row[idx2]),
-                            None => {
-                                log_error!("no field named {}", self.field_name);
-                                return false;
-                            }
-                        },
-                        None => {
-                            log_error!("no field named {}", self.field_name);
-                            return false;
-                        }
-                    }
-                }
-                _ => {
-                    log_error!(
-                        "the value {} can not be compared to the value at field '{}'",
-                        self.rhs,
-                        self.field_name
-                    );
-                    return false;
-                }
-            },
-            ComparisonOps::EndsWith => match &self.rhs {
-                Value::Literal(val) => match fields.iter().position(|f| *f == self.field_name) {
-                    Some(idx) => return row[idx].ends_with(val),
-                    None => {
-                        log_error!("no field named {}", self.field_name);
-                        return false;
-                    }
-                },
-                Value::FieldName(field_name) => {
-                    match fields.iter().position(|f| *f == self.field_name) {
-                        Some(idx1) => match fields.iter().position(|f| f == field_name) {
-                            Some(idx2) => return row[idx1].ends_with(&row[idx2]),
-                            None => {
-                                log_error!("no field named {}", self.field_name);
-                                return false;
-                            }
-                        },
-                        None => {
-                            log_error!("no field named {}", self.field_name);
-                            return false;
-                        }
-                    }
-                }
-                _ => {
-                    log_error!(
-                        "the value {} can not be compared to the value at field '{}'",
-                        self.rhs,
-                        self.field_name
-                    );
-                    return false;
-                }
-            },
+            ComparisonOps::Is => return self.compair_strings(fields, row, |a, b| return a == b),
+            ComparisonOps::IsNot => return self.compair_strings(fields, row, |a, b| return a != b),
+            ComparisonOps::Contains => {
+                return self.compair_strings(fields, row, |a, b| return a.contains(b));
+            }
+            ComparisonOps::StartsWith => {
+                return self.compair_strings(fields, row, |a, b| return a.starts_with(b));
+            }
+            ComparisonOps::EndsWith => {
+                return self.compair_strings(fields, row, |a, b| return a.ends_with(b));
+            }
             ComparisonOps::In => match &self.rhs {
                 Value::List(list) => match fields.iter().position(|f| *f == self.field_name) {
                     Some(idx) => return list.contains(&row[idx]),
@@ -432,8 +237,8 @@ impl Comparison {
             },
         }
     }
-    fn equal(&self, fields: &Vec<String>, row: &Vec<String>) -> bool {
-        match &self.rhs {
+    fn equal(&self, value: &Value, fields: &Vec<String>, row: &Vec<String>) -> bool {
+        match value {
             Value::FieldName(field) => match self.n_compaire_to_field(field, fields, row) {
                 Some(order) => match order {
                     Ordering::Equal => return true,
@@ -452,6 +257,51 @@ impl Comparison {
             _ => todo!(),
         }
     }
+    fn less_than(&self, value: &Value, fields: &Vec<String>, row: &Vec<String>) -> bool {
+        match value {
+            Value::FieldName(field) => match self.n_compaire_to_field(field, fields, row) {
+                Some(order) => match order {
+                    Ordering::Less => return true,
+                    _ => return false,
+                },
+                None => return false,
+            },
+            Value::Number(val) => match self.compaire_to_number(val.clone(), fields, row) {
+                Some(order) => match order {
+                    Ordering::Less => return true,
+                    _ => return false,
+                },
+                None => return false,
+            },
+            Value::None => return false,
+            _ => unreachable!(
+                "the value passed to 'less_than' function can only be a number or a field name"
+            ),
+        }
+    }
+    fn greater_than(&self, value: &Value, fields: &Vec<String>, row: &Vec<String>) -> bool {
+        match value {
+            Value::FieldName(field) => match self.n_compaire_to_field(field, fields, row) {
+                Some(order) => match order {
+                    Ordering::Greater => return true,
+                    _ => return false,
+                },
+                None => return false,
+            },
+            Value::Number(val) => match self.compaire_to_number(val.clone(), fields, row) {
+                Some(order) => match order {
+                    Ordering::Greater => return true,
+                    _ => return false,
+                },
+                None => return false,
+            },
+            Value::None => return false,
+            _ => unreachable!(
+                "the value passed to 'less_than' function can only be a number or a field name"
+            ),
+        }
+    }
+
     fn is_none(&self, fields: &Vec<String>, row: &Vec<String>) -> bool {
         match fields.iter().position(|f| *f == self.field_name) {
             Some(idx) => return row[idx] == "",
@@ -459,53 +309,6 @@ impl Comparison {
                 log_error!("no field named {}", self.field_name);
                 return false;
             }
-        }
-    }
-    fn greater_than_or_equal(
-        &self,
-        value: &Value,
-        fields: &Vec<String>,
-        row: &Vec<String>,
-    ) -> bool {
-        match value {
-            Value::FieldName(field) => match self.n_compaire_to_field(field, fields, row) {
-                Some(order) => match order {
-                    Ordering::Greater | Ordering::Equal => return true,
-                    _ => return false,
-                },
-                None => return false,
-            },
-            Value::Number(val) => match self.compaire_to_number(val.clone(), fields, row) {
-                Some(order) => match order {
-                    Ordering::Greater | Ordering::Equal => return true,
-                    _ => return false,
-                },
-                None => return false,
-            },
-            Value::None => return false,
-            _ => unreachable!(
-                "the value passed to 'greater_than_or_equal' function can only be a number or a field name"
-            ),
-        }
-    }
-    fn less_than_or_equal(&self, value: &Value, fields: &Vec<String>, row: &Vec<String>) -> bool {
-        match value {
-            Value::FieldName(field) => match self.n_compaire_to_field(field, fields, row) {
-                Some(order) => match order {
-                    Ordering::Less | Ordering::Equal => return true,
-                    _ => return false,
-                },
-                None => return false,
-            },
-            Value::Number(val) => match self.compaire_to_number(val.clone(), fields, row) {
-                Some(order) => match order {
-                    Ordering::Less | Ordering::Equal => return true,
-                    _ => return false,
-                },
-                None => return false,
-            },
-            Value::None => return false,
-            _ => todo!(),
         }
     }
     // numerical comparison between two fields
@@ -586,6 +389,49 @@ impl Comparison {
             return Some(Ordering::Greater);
         }
         return Some(Ordering::Less);
+    }
+    // this function will return the result of a string comparison between the self.field_name value and the
+    // self.rhs value
+    fn compair_strings<F>(&self, fields: &Vec<String>, row: &Vec<String>, comparison: F) -> bool
+    where
+        F: Fn(&String, &String) -> bool,
+    {
+        match &self.rhs {
+            Value::Literal(val) => match fields.iter().position(|f| *f == self.field_name) {
+                Some(idx) => return comparison(&row[idx], &val.to_string()),
+                None => {
+                    log_error!("no field named {}", self.field_name);
+                    return false;
+                }
+            },
+            Value::FieldName(field_name) => {
+                match fields.iter().position(|f| *f == self.field_name) {
+                    Some(idx1) => match fields.iter().position(|f| *f == *field_name) {
+                        Some(idx2) => {
+                            return comparison(&row[idx1], &row[idx2]);
+                        }
+                        None => {
+                            log_error!("no field named {}", field_name);
+                            return false;
+                        }
+                    },
+                    None => {
+                        log_error!("no field named {}", self.field_name);
+                        return false;
+                    }
+                }
+            }
+            Value::None => return self.is_none(fields, row),
+
+            _ => {
+                log_error!(
+                    "the value {} can not be compared to the value at field '{}'",
+                    self.rhs,
+                    self.field_name
+                );
+                return false;
+            }
+        }
     }
 }
 

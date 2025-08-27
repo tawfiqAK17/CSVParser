@@ -1,6 +1,6 @@
 use crate::log_error;
-use crate::log_warning;
 use crate::log_info;
+use crate::log_warning;
 use crate::{OPTIONS, Options};
 
 use super::query_engine;
@@ -149,38 +149,7 @@ pub fn parse_file(path: &str) -> Option<(Vec<String>, Vec<Vec<String>>)> {
         let mut row: Vec<String> = Vec::new();
         for mut i in 0..line_vals.len() {
             let val = line_vals[i].trim().to_string();
-            // if the value of the field is empty
-            // if val.is_empty() {
-            //     let mut new_val = String::new();
-            //     log_warning!("the value of the field {} is empty at line:", fields[i]);
-            //     println!("->: {line_content}");
-            //     println!(
-            //         "do you want to insert it here (enter the value to inset or press Return to escape):"
-            //     );
-            //     match stdin().read_line(&mut new_val) {
-            //         Ok(_) => {
-            //             new_val = new_val.trim().to_string();
-            //             // the user pressed Return
-            //             if new_val.is_empty() {
-            //                 log_warning!(
-            //                     "this line would not be considered and will be removed when you save the file"
-            //                 );
-            //                 row.clear();
-            //                 break;
-            //             }
-            //             // the user insert a value
-            //             row.push(new_val);
-            //         }
-            //         Err(_) => {
-            //             log_error!("there was an error while reading the new value try again");
-            //             i -= 1;
-            //             continue;
-            //         }
-            //     }
-            // } else {
-                // the value is not empty
-                row.push(val);
-            // }
+            row.push(val);
         }
         // so the empty lines will be escaped
         if !row.is_empty() {
