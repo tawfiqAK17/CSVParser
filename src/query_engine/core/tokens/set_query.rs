@@ -99,12 +99,12 @@ impl SetQuery {
             // this for loop will evaluate the where condition for every line
             for i in 0..rows.len() {
                 if where_clause.evaluate(fields, &rows[i]) {
-                    self.assign_list.evaluate(fields, &mut rows[i]);
+                    self.assign_list.set_evaluation(fields, &mut rows[i]);
                 }
             }
         } else {
             for i in 0..rows.len() {
-                self.assign_list.evaluate(fields, &mut rows[i]);
+                self.assign_list.set_evaluation(fields, &mut rows[i]);
             }
         }
         ()

@@ -54,7 +54,7 @@ impl Assignment {
             None => return (ParseResult::None, idx),
         }
     }
-    pub fn evaluate(&self, fields: &Vec<String>, row: &mut Vec<String>) {
+    pub fn set_evaluation(&self, fields: &Vec<String>, row: &mut Vec<String>) {
         match fields.iter().position(|f| *f == self.field_name) {
             Some(idx) => match self.modification.evaluate(fields, row) {
                 Some(new_val) => row[idx] = new_val,
@@ -62,6 +62,22 @@ impl Assignment {
             },
             None => {
                 log_error!("no field named {}", self.field_name);
+            }
+        }
+    }
+    pub fn insert_evaluation(&self, fields: &mut Vec<String>, rows: &mut Vec<Vec<String>>) {
+        match fields.iter().position(|f| *f == self.field_name) {
+            Some(_) => {
+                log_error!("the field name '{}' is already exist", self.field_name);
+            }
+            None => {
+                fields.push(self.field_name.clone());
+                for row in rows {
+                    match self.modification.evaluate(fields, row) {
+                        Some(new_val) => row.push(new_val),
+                        None => row.push("".to_string()),
+                    }
+                }
             }
         }
     }

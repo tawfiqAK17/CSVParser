@@ -14,7 +14,6 @@ pub enum Functions {
     Head(usize),
     Tail(usize),
 }
-
 impl Functions {
     pub fn get_available_functions_names<'a>() -> Vec<&'a str> {
       return vec!["sort", "rsort", "nsort", "nrsort", "head", "tail"];
@@ -178,7 +177,7 @@ impl Function {
             }
 
             Functions::Head(arg) => {
-                rows.drain(arg.clone()..);
+                rows.drain(arg..);
             }
             Functions::Tail(arg) => {
                 rows.drain(0..rows.len() - arg);

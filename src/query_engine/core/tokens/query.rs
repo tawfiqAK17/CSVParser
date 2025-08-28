@@ -1,11 +1,13 @@
 use super::ParseResult;
 use super::get_query::GetQuery;
+use super::insert_query::InsertQuery;
 use super::set_query::SetQuery;
 
 #[derive(Debug)]
 pub struct Query {
     get_query: Option<GetQuery>,
     set_query: Option<SetQuery>,
+    insert_query: Option<InsertQuery>,
 }
 
 impl Query {
@@ -15,6 +17,7 @@ impl Query {
                 return Some(Query {
                     get_query: Some(get_query),
                     set_query: None,
+                    insert_query: None,
                 });
             }
             ParseResult::None => {}
@@ -25,6 +28,18 @@ impl Query {
                 return Some(Query {
                     get_query: None,
                     set_query: Some(set_query),
+                    insert_query: None,
+                });
+            }
+            ParseResult::None => {}
+            ParseResult::Err => return None,
+        }
+        match InsertQuery::parse(lexemes) {
+            ParseResult::Val(insert_query) => {
+                return Some(Query {
+                    get_query: None,
+                    set_query: None,
+                    insert_query: Some(insert_query),
                 });
             }
             ParseResult::None => {}
@@ -39,6 +54,10 @@ impl Query {
         }
         match &self.set_query {
             Some(set_query) => return set_query.evaluate(fields, rows),
+            None => {}
+        }
+        match &self.insert_query {
+            Some(insert_query) => return insert_query.evaluate(fields, rows),
             None => {}
         }
     }

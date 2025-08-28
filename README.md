@@ -157,7 +157,7 @@ The tool provides clear error messages for:
 
 ## Roadmap
 
-- [ ] **INSERT operations** - Add new rows to CSV files
+- [x] **INSERT operations** - Add new rows to CSV files
 - [ ] **DELETE operations** - Remove rows from CSV files
 - [ ] **Aggregation functions** - SUM, COUNT, AVG, etc.
 - [ ] **JSON file support** - Extend functionality to JSON data

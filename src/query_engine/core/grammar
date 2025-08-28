@@ -2,6 +2,8 @@ grammar:
 
 Query             = GetQuery | SetQuery 
 GetQuery          = "get" Selector WhereClause? FunctionCall?
+SetQuery          = "set" WhereClause? "to" AssignList
+InsertQuery       = AssignList
 FunctionCall      = Function FunctionCall*
 Function          = NSort | NReverseSort | Sort | ReverseSort | Head | Tail
 NSort             = "nsort" FieldName
@@ -10,7 +12,6 @@ Sort              = "sort" FieldName
 ReverseSort       = "rsort" FieldName
 Head              = "head" Number
 Tail              = "tail" Number
-SetQuery          = "set" WhereClause? "to" AssignList
 AssignList        = Assignment (Assignment)*
 Assignment        = FieldName "=" Modification 
 Selector          = "*" | FieldName (FieldName)*

@@ -24,10 +24,14 @@ impl AssignList {
             }
         }
     }
-    pub fn evaluate(&self, fields: &Vec<String>, row: &mut Vec<String>) -> () {
+    pub fn set_evaluation(&self, fields: &Vec<String>, row: &mut Vec<String>) {
         for assignment in self.assignments.iter() {
-            assignment.evaluate(fields, row);
+            assignment.set_evaluation(fields, row);
         }
-        ()
+    }
+    pub fn insert_evaluation(&self, fields: &mut Vec<String>, rows: &mut Vec<Vec<String>>) {
+        for assignment in self.assignments.iter() {
+            assignment.insert_evaluation(fields, rows);
+        }
     }
 }
