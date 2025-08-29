@@ -16,7 +16,7 @@ pub enum Functions {
 }
 impl Functions {
     pub fn get_available_functions_names<'a>() -> Vec<&'a str> {
-      return vec!["sort", "rsort", "nsort", "nrsort", "head", "tail"];
+      return vec!["sort", "rsort", "nsort", "rnsort", "head", "tail"];
     }
 }
 #[derive(Debug)]
@@ -62,7 +62,7 @@ impl Function {
                                     idx + 1,
                                 );
                             }
-                            "nrsort" => {
+                            "rnsort" => {
                                 return (
                                     ParseResult::Val(Function {
                                         function_name: Functions::ReverseNSort(field_name),

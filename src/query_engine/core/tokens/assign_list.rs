@@ -6,7 +6,7 @@ pub struct AssignList {
 }
 
 impl AssignList {
-    pub fn parse(lexemes: &[String], idx: usize) -> ParseResult<Self> {
+    pub fn parse(lexemes: &[String], idx: usize) -> (ParseResult<Self>, usize) {
         let mut assignments: Vec<Assignment> = Vec::new();
         let mut current_idx = idx;
         loop {
@@ -16,11 +16,11 @@ impl AssignList {
                 ParseResult::Val(assignment) => assignments.push(assignment),
                 ParseResult::None => {
                     if assignments.is_empty() {
-                        return ParseResult::None;
+                        return (ParseResult::None, idx);
                     }
-                    return ParseResult::Val(AssignList { assignments });
+                    return (ParseResult::Val(AssignList { assignments }), last_idx);
                 }
-                ParseResult::Err => return ParseResult::Err,
+                ParseResult::Err => return (ParseResult::Err, idx),
             }
         }
     }
@@ -29,9 +29,21 @@ impl AssignList {
             assignment.set_evaluation(fields, row);
         }
     }
-    pub fn insert_evaluation(&self, fields: &mut Vec<String>, rows: &mut Vec<Vec<String>>) {
+    pub fn insert_column_evaluation(
+        &self,
+        fields: &mut Vec<String>,
+        rows: &mut Vec<Vec<String>>,
+        where_clause_eval_results: &Vec<bool>,
+    ) {
         for assignment in self.assignments.iter() {
-            assignment.insert_evaluation(fields, rows);
+            assignment.insert_column_evaluation(fields, rows, where_clause_eval_results);
         }
+    }
+    pub fn insert_row_evaluation(&self, fields: &mut Vec<String>, rows: &mut Vec<Vec<String>>) {
+        let mut new_row: Vec<String> = vec!["".to_string(); fields.len()];
+        for assignment in self.assignments.iter() {
+            assignment.set_evaluation(fields, &mut new_row);
+        }
+        rows.push(new_row);
     }
 }

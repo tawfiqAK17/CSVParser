@@ -1,9 +1,9 @@
 use super::ParseResult;
 use super::function_call::FunctionCall;
-use crate::log_error;
 use super::value;
 use super::where_clause::WhereClause;
 use crate::OPTIONS;
+use crate::log_error;
 use terminal_size::{Width, terminal_size};
 
 #[derive(Debug)]
@@ -229,19 +229,21 @@ impl GetQuery {
         }
     }
 
-    fn print_row(&self, idxs: &Vec<usize>, row: &Vec<String>, longerst_vals_len: &Vec<usize>, separator: &String) {
+    fn print_row(
+        &self,
+        idxs: &Vec<usize>,
+        row: &Vec<String>,
+        longerst_vals_len: &Vec<usize>,
+        separator: &String,
+    ) {
         for &i in idxs {
-            if longerst_vals_len[i] > 3 {
-                if row[i].len() > longerst_vals_len[i] {
-                    print!("{}...", &row[i][0..longerst_vals_len[i] - 3]);
-                } else {
-                    print!("{}", row[i]);
-                    for _ in row[i].len()..longerst_vals_len[i] {
-                        print!(" ");
-                    }
-                }
+            if row[i].len() > longerst_vals_len[i] {
+                print!("{}...", &row[i][0..longerst_vals_len[i] - 3]);
             } else {
-                print!("{}", row[i])
+                print!("{}", row[i]);
+                for _ in row[i].len()..longerst_vals_len[i] {
+                    print!(" ");
+                }
             }
             // the last val in a row wont have a , after it
             if i < idxs[idxs.len() - 1] {

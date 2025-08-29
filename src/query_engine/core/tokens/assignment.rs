@@ -47,8 +47,7 @@ impl Assignment {
                         }
                     }
                 } else {
-                    log_error!("expecting the name of the field which will be modified");
-                    return (ParseResult::Err, idx);
+                    return (ParseResult::None, idx);
                 }
             }
             None => return (ParseResult::None, idx),
@@ -65,17 +64,28 @@ impl Assignment {
             }
         }
     }
-    pub fn insert_evaluation(&self, fields: &mut Vec<String>, rows: &mut Vec<Vec<String>>) {
+    pub fn insert_column_evaluation(
+        &self,
+        fields: &mut Vec<String>,
+        rows: &mut Vec<Vec<String>>,
+        where_clause_eval_results: &Vec<bool>,
+    ) {
         match fields.iter().position(|f| *f == self.field_name) {
             Some(_) => {
                 log_error!("the field name '{}' is already exist", self.field_name);
             }
             None => {
                 fields.push(self.field_name.clone());
-                for row in rows {
-                    match self.modification.evaluate(fields, row) {
-                        Some(new_val) => row.push(new_val),
-                        None => row.push("".to_string()),
+                for i in 0..rows.len() {
+                    // if the where condition is true for the current line add the new field to it
+                    // else it will be empty
+                    if where_clause_eval_results[i] {
+                        match self.modification.evaluate(fields, &rows[i]) {
+                            Some(new_val) => rows[i].push(new_val),
+                            None => rows[i].push("".to_string()),
+                        }
+                    } else {
+                        rows[i].push("".to_string());
                     }
                 }
             }

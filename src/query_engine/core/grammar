@@ -2,8 +2,9 @@ grammar:
 
 Query             = GetQuery | SetQuery 
 GetQuery          = "get" Selector WhereClause? FunctionCall?
-SetQuery          = "set" WhereClause? "to" AssignList
-InsertQuery       = AssignList
+SetQuery          = "set" AssignList WhereClause?
+InsertColumnQuery = AssignList WhereClause?
+InsertRowQuery    = AssignList
 FunctionCall      = Function FunctionCall*
 Function          = NSort | NReverseSort | Sort | ReverseSort | Head | Tail
 NSort             = "nsort" FieldName
@@ -29,8 +30,8 @@ NumericalOp       = "==" | "!=" | ">" | "<" | ">=" | "<=" | BetweenOp
 BetweenOp         = "between" (Number | FieldName) "and" (Number | FieldName)
 StringOp          = "is" | "contains" | "starts-with" | "ends-with"
 PrimitiveValue    = Literal | Number | List
-Modifier          = "+" | "-" | "*" | "/" | "%" | "concat" | "to-lower" | "to-upper"
+Modifier          = "+" | "-" | "*" | "/" | "%" | "||" | "to-lower" | "to-upper"
 Literal           = '"' [^"]* '"'
 Number            = Float
-List              = "[" PrimitiveValue ("," PrimitiveValue)* "]" | GetQuery
+List              = "[" PrimitiveValue ("," PrimitiveValue)* "]" |
 FieldName         = $String

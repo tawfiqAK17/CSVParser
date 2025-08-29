@@ -29,7 +29,7 @@ JCParser [FILE_TYPE] [OPTIONS] <FILE_PATH>
 
 ### Commands
 
-#### GET - Query Data
+#### get - Query Data
 
 Retrieve data from CSV files using get command.
 
@@ -49,20 +49,46 @@ get * [FUNCTION NAME] [FUNCTION PARAMETER]
 
 check [Comparison operators](#comparison-operators), [Functions](#functions) and [Values](#values).
 
-#### SET - Modify Data
+#### set - Modify Data
 
 Update CSV data using set command.
 
 ```bash
 # Update specific rows
-set to $field_name = [VALUE | MODIFICATION]
+set $field_name = [VALUE | MODIFICATION]
 # Update multiple columns
-set to $field_name1 = [VALUE | MODIFICATION] $field_name2 = [VALUE | MODIFICATION]
+set $field_name1 = [VALUE | MODIFICATION] $field_name2 = [VALUE | MODIFICATION]
 # Update columns that satisfied a specific condition
-set where [CONDITION] to $field_name1 = [VALUE | MODIFICATION] $field_name2 = [VALUE | MODIFICATION]
+set $field_name1 = [VALUE | MODIFICATION] $field_name2 = [VALUE | MODIFICATION] where [CONDITION]
 ```
 
 check [Modification](#modification) and [Values](#values).
+
+#### insert-row - Modify Data
+
+Update CSV data using insert-row command.
+
+```bash
+# insert a single value 
+# the other values will be set to "" (None)
+insert-row $field_name = [VALUE | MODIFICATION]
+# insert multiple values 
+insert-row $field_name1 = [VALUE | MODIFICATION] $field_name2 = [VALUE | MODIFICATION]
+```
+
+#### insert-column - Modify Data
+
+Update CSV data using insert-column command.
+
+```bash
+# insert a new column 
+insert-column $field_name = [VALUE | MODIFICATION]
+# insert multiple columns
+insert-column $field_name1 = [VALUE | MODIFICATION] $field_name2 = [VALUE | MODIFICATION]
+# insert a column for only the rows that satisfies a condition 
+# the value of the new column for other rows will be set to "" (None)
+insert-column $field_name1 = [VALUE | MODIFICATION] $field_name2 = [VALUE | MODIFICATION] where [CONDITION]
+```
 
 #### Values:
 
@@ -144,6 +170,7 @@ set where $age < 27 to $department = "Tech"
 
 ## Options
 
+- `-csv` or `-json` - the type of the file
 - `-s<CHAR>` - CSV delimiter character [default: ,]
 
 ## Error Handling
