@@ -16,6 +16,7 @@ pub mod assignment;
 pub mod modification;
 pub mod insert_column_query;
 pub mod insert_row_query;
+pub mod delete_query;
 
 pub enum ParseResult<T> {
     Val(T),

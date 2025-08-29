@@ -53,7 +53,7 @@ impl Assignment {
             None => return (ParseResult::None, idx),
         }
     }
-    pub fn set_evaluation(&self, fields: &Vec<String>, row: &mut Vec<String>) {
+    pub fn evaluate(&self, fields: &Vec<String>, row: &mut Vec<String>) {
         match fields.iter().position(|f| *f == self.field_name) {
             Some(idx) => match self.modification.evaluate(fields, row) {
                 Some(new_val) => row[idx] = new_val,

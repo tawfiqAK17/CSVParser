@@ -26,7 +26,7 @@ impl AssignList {
     }
     pub fn set_evaluation(&self, fields: &Vec<String>, row: &mut Vec<String>) {
         for assignment in self.assignments.iter() {
-            assignment.set_evaluation(fields, row);
+            assignment.evaluate(fields, row);
         }
     }
     pub fn insert_column_evaluation(
@@ -42,7 +42,7 @@ impl AssignList {
     pub fn insert_row_evaluation(&self, fields: &mut Vec<String>, rows: &mut Vec<Vec<String>>) {
         let mut new_row: Vec<String> = vec!["".to_string(); fields.len()];
         for assignment in self.assignments.iter() {
-            assignment.set_evaluation(fields, &mut new_row);
+            assignment.evaluate(fields, &mut new_row);
         }
         rows.push(new_row);
     }

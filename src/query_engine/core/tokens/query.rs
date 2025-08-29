@@ -1,4 +1,5 @@
 use super::ParseResult;
+use super::delete_query::DeleteQuery;
 use super::get_query::GetQuery;
 use super::insert_column_query::InsertColumnQuery;
 use super::insert_row_query::InsertRowQuery;
@@ -10,6 +11,7 @@ pub struct Query {
     set_query: Option<SetQuery>,
     insert_column_query: Option<InsertColumnQuery>,
     insert_row_query: Option<InsertRowQuery>,
+    delete_query: Option<DeleteQuery>,
 }
 
 impl Query {
@@ -21,6 +23,7 @@ impl Query {
                     set_query: None,
                     insert_column_query: None,
                     insert_row_query: None,
+                    delete_query: None,
                 });
             }
             ParseResult::None => {}
@@ -33,6 +36,7 @@ impl Query {
                     set_query: Some(set_query),
                     insert_column_query: None,
                     insert_row_query: None,
+                    delete_query: None,
                 });
             }
             ParseResult::None => {}
@@ -45,6 +49,7 @@ impl Query {
                     set_query: None,
                     insert_column_query: Some(insert_column_query),
                     insert_row_query: None,
+                    delete_query: None,
                 });
             }
             ParseResult::None => {}
@@ -57,6 +62,20 @@ impl Query {
                     set_query: None,
                     insert_column_query: None,
                     insert_row_query: Some(insert_row_query),
+                    delete_query: None,
+                });
+            }
+            ParseResult::None => {}
+            ParseResult::Err => return None,
+        }
+        match DeleteQuery::parse(lexemes) {
+            ParseResult::Val(delete_query) => {
+                return Some(Query {
+                    get_query: None,
+                    set_query: None,
+                    insert_column_query: None,
+                    insert_row_query: None,
+                    delete_query: Some(delete_query),
                 });
             }
             ParseResult::None => {}
@@ -79,6 +98,10 @@ impl Query {
         }
         match &self.insert_row_query {
             Some(insert_row_query) => return insert_row_query.evaluate(fields, rows),
+            None => {}
+        }
+        match &self.delete_query {
+            Some(delete_query) => return delete_query.evaluate(fields, rows),
             None => {}
         }
     }

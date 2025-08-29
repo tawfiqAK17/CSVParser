@@ -90,6 +90,14 @@ insert-column $field_name1 = [VALUE | MODIFICATION] $field_name2 = [VALUE | MODI
 insert-column $field_name1 = [VALUE | MODIFICATION] $field_name2 = [VALUE | MODIFICATION] where [CONDITION]
 ```
 
+#### insert-column - Delete Data
+
+Update CSV data using delete command.
+
+```bash
+# delete a row satisfies a condition 
+delete where [CONDITION]
+```
 #### Values:
 
 A vlaue can be a field name(ex: $age), number(ex: 25), string(ex: "bob") or a list(ex:[1, 2, 3] or ["foo", "bar"])
@@ -152,20 +160,29 @@ id,name,age,department,salary
 ### Example Queries
 
 ```bash
-# Get all employees
+# get all employees
 get *
 
-# Get engineers only
+# get engineers only
 get $department where $department is "Engineering"
 
-# Get high earners
+# get high earners
 get * where $salary >= 70000
 
-# Update salary
+# update salary
 set where $name is "Alice" to $salary = 80000
 
-# Update department for young employees
+# update department for young employees
 set where $age < 27 to $department = "Tech"
+
+# add new column named 'bonus'
+insert-column $bonus = $salary * 0.1
+
+# add new row
+insert-row $id = 5 $name = Jack $age = 27 $department = "IT" $salary = 80000 $bonus = $salary * 0.1 
+
+# delete a row 
+delete where $id == 5
 ```
 
 ## Options
@@ -185,7 +202,8 @@ The tool provides clear error messages for:
 ## Roadmap
 
 - [x] **INSERT operations** - Add new rows to CSV files
-- [ ] **DELETE operations** - Remove rows from CSV files
+- [x] **DELETE operations** - Remove rows from CSV files
+- [ ] **Nested modification** - Apply multiple modification on a field (ex: $email = $name || $age || "@gmail.com") 
 - [ ] **Aggregation functions** - SUM, COUNT, AVG, etc.
 - [ ] **JSON file support** - Extend functionality to JSON data
 

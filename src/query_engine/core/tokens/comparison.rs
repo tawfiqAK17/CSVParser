@@ -364,6 +364,9 @@ impl Comparison {
         row: &Vec<String>,
     ) -> Option<Ordering> {
         let field_idx: usize;
+        if self.is_none(fields, row) {
+          return Some(Ordering::Less);
+        }
         match fields.iter().position(|f| *f == self.field_name) {
             Some(idx) => field_idx = idx,
             None => {
