@@ -203,7 +203,7 @@ The tool provides clear error messages for:
 
 - [x] **INSERT operations** - Add new rows to CSV files
 - [x] **DELETE operations** - Remove rows from CSV files
-- [ ] **Nested modification** - Apply multiple modification on a field (ex: $email = $name || $age || "@gmail.com") 
+- [x] **Nested modification** - Apply multiple modification on a field (ex: $email = $name || $age || "@gmail.com") 
 - [ ] **Aggregation functions** - SUM, COUNT, AVG, etc.
 - [ ] **JSON file support** - Extend functionality to JSON data
 
