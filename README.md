@@ -69,10 +69,10 @@ check [Modification](#modification) and [Values](#values).
 Update CSV data using insert-row command.
 
 ```bash
-# insert a single value 
+# insert a single value
 # the other values will be set to "" (None)
 insert-row $field_name = [VALUE | MODIFICATION]
-# insert multiple values 
+# insert multiple values
 insert-row $field_name1 = [VALUE | MODIFICATION] $field_name2 = [VALUE | MODIFICATION]
 ```
 
@@ -81,11 +81,11 @@ insert-row $field_name1 = [VALUE | MODIFICATION] $field_name2 = [VALUE | MODIFIC
 Update CSV data using insert-column command.
 
 ```bash
-# insert a new column 
+# insert a new column
 insert-column $field_name = [VALUE | MODIFICATION]
 # insert multiple columns
 insert-column $field_name1 = [VALUE | MODIFICATION] $field_name2 = [VALUE | MODIFICATION]
-# insert a column for only the rows that satisfies a condition 
+# insert a column for only the rows that satisfies a condition
 # the value of the new column for other rows will be set to "" (None)
 insert-column $field_name1 = [VALUE | MODIFICATION] $field_name2 = [VALUE | MODIFICATION] where [CONDITION]
 ```
@@ -95,9 +95,21 @@ insert-column $field_name1 = [VALUE | MODIFICATION] $field_name2 = [VALUE | MODI
 Update CSV data using delete command.
 
 ```bash
-# delete a row satisfies a condition 
+# delete a row satisfies a condition
 delete where [CONDITION]
 ```
+
+#### Aggregation functions - get data information
+
+Get some information on the csv data
+
+```bash
+# call an aggregation function
+[AGGREGATION FUNCTION] [MODIFICATION] [WHERE CLAUSE]
+```
+
+check [Aggregation functions](#aggregation-functions).
+
 #### Values:
 
 A vlaue can be a field name(ex: $age), number(ex: 25), string(ex: "bob") or a list(ex:[1, 2, 3] or ["foo", "bar"])
@@ -131,7 +143,7 @@ A vlaue can be a field name(ex: $age), number(ex: 25), string(ex: "bob") or a li
 | tail   | number     | get the last n row            |
 | head   | number     | get the first n row           |
 
-#### Modification
+#### Modification:
 
 | modifier | description                 | example                                    |
 | :------- | :-------------------------- | :----------------------------------------- |
@@ -144,6 +156,16 @@ A vlaue can be a field name(ex: $age), number(ex: 25), string(ex: "bob") or a li
 | \|\|     | concatenate strings         | \$full_name = \$first_name \|\| $last_name |
 | to-upper | convert string to uppercase | \$name = \$name to-upper                   |
 | to-lower | convert string to lowercase | \$name = \$name to-lower                   |
+
+#### Aggregation functions:
+
+| function | description                                               | example      |
+| :------- | :-------------------------------------------------------- | :----------- |
+| sum      | calculate the sum                                         | sum $salary  |
+| avg      | calculate the average                                     | avg $age     |
+| mean     | calculate the mean                                        | mean $age    |
+| count    | count the number of value that satisfies the where clause | count $name  |
+| counter  | counts the occurrences of values                          | counter $age |
 
 ## Examples
 
@@ -179,10 +201,19 @@ set where $age < 27 to $department = "Tech"
 insert-column $bonus = $salary * 0.1
 
 # add new row
-insert-row $id = 5 $name = Jack $age = 27 $department = "IT" $salary = 80000 $bonus = $salary * 0.1 
+insert-row $id = 5 $name = Jack $age = 27 $department = "IT" $salary = 80000 $bonus = $salary * 0.1
 
-# delete a row 
+# delete a row
 delete where $id == 5
+
+#get the salary sum of employees at the IT department
+sum $salary where $department is "IT"
+
+#get the number of employees at the Sales department
+count $id where $department is "Sales"
+
+#get the number of employees at each department
+counter $department
 ```
 
 ## Options
@@ -203,8 +234,8 @@ The tool provides clear error messages for:
 
 - [x] **INSERT operations** - Add new rows to CSV files
 - [x] **DELETE operations** - Remove rows from CSV files
-- [x] **Nested modification** - Apply multiple modification on a field (ex: $email = $name || $age || "@gmail.com") 
-- [ ] **Aggregation functions** - SUM, COUNT, AVG, etc.
+- [x] **Nested modification** - Apply multiple modification on a field (ex: $email = $name || $age || "@gmail.com")
+- [x] **Aggregation functions** - SUM, COUNT, AVG, etc.
 - [ ] **JSON file support** - Extend functionality to JSON data
 
 ## Contributing

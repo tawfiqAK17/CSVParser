@@ -4,6 +4,7 @@ use super::get_query::GetQuery;
 use super::insert_column_query::InsertColumnQuery;
 use super::insert_row_query::InsertRowQuery;
 use super::set_query::SetQuery;
+use super::aggregation_function_call::AggregationFunctionCall;
 
 #[derive(Debug)]
 pub struct Query {
@@ -12,6 +13,7 @@ pub struct Query {
     insert_column_query: Option<InsertColumnQuery>,
     insert_row_query: Option<InsertRowQuery>,
     delete_query: Option<DeleteQuery>,
+    aggregation_function_call: Option<AggregationFunctionCall>,
 }
 
 impl Query {
@@ -24,6 +26,7 @@ impl Query {
                     insert_column_query: None,
                     insert_row_query: None,
                     delete_query: None,
+                    aggregation_function_call: None,
                 });
             }
             ParseResult::None => {}
@@ -37,6 +40,7 @@ impl Query {
                     insert_column_query: None,
                     insert_row_query: None,
                     delete_query: None,
+                    aggregation_function_call: None,
                 });
             }
             ParseResult::None => {}
@@ -50,6 +54,7 @@ impl Query {
                     insert_column_query: Some(insert_column_query),
                     insert_row_query: None,
                     delete_query: None,
+                    aggregation_function_call: None,
                 });
             }
             ParseResult::None => {}
@@ -63,6 +68,7 @@ impl Query {
                     insert_column_query: None,
                     insert_row_query: Some(insert_row_query),
                     delete_query: None,
+                    aggregation_function_call: None,
                 });
             }
             ParseResult::None => {}
@@ -76,6 +82,21 @@ impl Query {
                     insert_column_query: None,
                     insert_row_query: None,
                     delete_query: Some(delete_query),
+                    aggregation_function_call: None,
+                });
+            }
+            ParseResult::None => {}
+            ParseResult::Err => return None,
+        }
+        match AggregationFunctionCall::parse(lexemes) {
+            ParseResult::Val(aggregation_function_call) => {
+                return Some(Query {
+                    get_query: None,
+                    set_query: None,
+                    insert_column_query: None,
+                    insert_row_query: None,
+                    delete_query: None,
+                    aggregation_function_call: Some(aggregation_function_call),
                 });
             }
             ParseResult::None => {}
@@ -103,6 +124,10 @@ impl Query {
         match &self.delete_query {
             Some(delete_query) => return delete_query.evaluate(fields, rows),
             None => {}
+        }
+        match &self.aggregation_function_call {
+            Some(aggregation_function_call) => return aggregation_function_call.evaluate(fields, rows),
+            None => {},
         }
     }
 }

@@ -387,199 +387,259 @@ impl Modification {
     }
 }
 
-// #[cfg(test)]
-// mod modification_tests {
-//     use super::*;
+#[cfg(test)]
+mod modification_tests {
+    use super::*;
 
-//     fn get_data() -> (Vec<String>, Vec<String>) {
-//         let fields = vec!["name".to_string(), "age".to_string(), "city".to_string()];
-//         let row = vec!["bob".to_string(), "45".to_string(), "London".to_string()];
-//         (fields, row)
-//     }
+    fn get_data() -> (Vec<String>, Vec<String>) {
+        let fields = vec!["name".to_string(), "age".to_string(), "city".to_string()];
+        let row = vec!["bob".to_string(), "45".to_string(), "London".to_string()];
+        (fields, row)
+    }
 
-//     #[test]
-//     fn arithmetic_plus() {
-//         let (fields, row) = get_data();
-//         let modification = Modification {
-//             lhs: Value::FieldName("age".to_string()),
-//             modifier: Some(Modifier::ArithmeticModifier(ArithmeticModifier::Plus)),
-//             rhs: Some(Box::new(Modification {
-//                 lhs: Value::Number(5.0),
-//                 modifier: None,
-//                 rhs: None,
-//             })),
-//         };
-//         assert_eq!(modification.evaluate(&fields, &row), Some("50".to_string()));
-//     }
+    #[test]
+    fn arithmetic_plus() {
+        let (fields, row) = get_data();
+        let modification = Modification {
+            lhs: Value::FieldName("age".to_string()),
+            modifier: Some(Modifier::ArithmeticModifier(ArithmeticModifier::Plus)),
+            additional_modifier: None,
+            rhs: Some(Box::new(Modification {
+                lhs: Value::Number(5.0),
+                modifier: None,
+                additional_modifier: None,
+                rhs: None,
+            })),
+        };
+        assert_eq!(modification.evaluate(&fields, &row), Some("50".to_string()));
+    }
 
-//     #[test]
-//     fn arithmetic_minus() {
-//         let (fields, row) = get_data();
-//         let modification = Modification {
-//             lhs: Value::FieldName("age".to_string()),
-//             modifier: Some(Modifier::ArithmeticModifier(ArithmeticModifier::Minus)),
-//             rhs: Some(Box::new(Modification {
-//                 lhs: Value::Number(5.0),
-//                 modifier: None,
-//                 rhs: None,
-//             })),
-//         };
-//         assert_eq!(modification.evaluate(&fields, &row), Some("40".to_string()));
-//     }
+    #[test]
+    fn arithmetic_minus() {
+        let (fields, row) = get_data();
+        let modification = Modification {
+            lhs: Value::FieldName("age".to_string()),
+            modifier: Some(Modifier::ArithmeticModifier(ArithmeticModifier::Minus)),
+            additional_modifier: None,
+            rhs: Some(Box::new(Modification {
+                lhs: Value::Number(5.0),
+                modifier: None,
+                additional_modifier: None,
+                rhs: None,
+            })),
+        };
+        assert_eq!(modification.evaluate(&fields, &row), Some("40".to_string()));
+    }
 
-//     #[test]
-//     fn arithmetic_multiply() {
-//         let (fields, row) = get_data();
-//         let modification = Modification {
-//             lhs: Value::FieldName("age".to_string()),
-//             modifier: Some(Modifier::ArithmeticModifier(ArithmeticModifier::Multiply)),
-//             rhs: Some(Box::new(Modification {
-//                 lhs: Value::Number(2.0),
-//                 modifier: None,
-//                 rhs: None,
-//             })),
-//         };
-//         assert_eq!(modification.evaluate(&fields, &row), Some("90".to_string()));
-//     }
+    #[test]
+    fn arithmetic_multiply() {
+        let (fields, row) = get_data();
+        let modification = Modification {
+            lhs: Value::FieldName("age".to_string()),
+            modifier: Some(Modifier::ArithmeticModifier(ArithmeticModifier::Multiply)),
+            additional_modifier: None,
+            rhs: Some(Box::new(Modification {
+                lhs: Value::Number(2.0),
+                modifier: None,
+                additional_modifier: None,
+                rhs: None,
+            })),
+        };
+        assert_eq!(modification.evaluate(&fields, &row), Some("90".to_string()));
+    }
 
-//     #[test]
-//     fn arithmetic_divide() {
-//         let (fields, row) = get_data();
-//         let modification = Modification {
-//             lhs: Value::FieldName("age".to_string()),
-//             modifier: Some(Modifier::ArithmeticModifier(ArithmeticModifier::Divide)),
-//             rhs: Some(Box::new(Modification {
-//                 lhs: Value::Number(5.0),
-//                 modifier: None,
-//                 rhs: None,
-//             })),
-//         };
-//         assert_eq!(modification.evaluate(&fields, &row), Some("9".to_string()));
-//     }
+    #[test]
+    fn arithmetic_divide() {
+        let (fields, row) = get_data();
+        let modification = Modification {
+            lhs: Value::FieldName("age".to_string()),
+            modifier: Some(Modifier::ArithmeticModifier(ArithmeticModifier::Divide)),
+            additional_modifier: None,
+            rhs: Some(Box::new(Modification {
+                lhs: Value::Number(5.0),
+                modifier: None,
+                additional_modifier: None,
+                rhs: None,
+            })),
+        };
+        assert_eq!(modification.evaluate(&fields, &row), Some("9".to_string()));
+    }
 
-//     #[test]
-//     fn arithmetic_modulo() {
-//         let (fields, row) = get_data();
-//         let modification = Modification {
-//             lhs: Value::FieldName("age".to_string()),
-//             modifier: Some(Modifier::ArithmeticModifier(ArithmeticModifier::Modulo)),
-//             rhs: Some(Box::new(Modification {
-//                 lhs: Value::Number(7.0),
-//                 modifier: None,
-//                 rhs: None,
-//             })),
-//         };
-//         assert_eq!(modification.evaluate(&fields, &row), Some("3".to_string()));
-//     }
+    #[test]
+    fn arithmetic_modulo() {
+        let (fields, row) = get_data();
+        let modification = Modification {
+            lhs: Value::FieldName("age".to_string()),
+            modifier: Some(Modifier::ArithmeticModifier(ArithmeticModifier::Modulo)),
+            additional_modifier: None,
+            rhs: Some(Box::new(Modification {
+                lhs: Value::Number(7.0),
+                modifier: None,
+                additional_modifier: None,
+                rhs: None,
+            })),
+        };
+        assert_eq!(modification.evaluate(&fields, &row), Some("3".to_string()));
+    }
 
-//     #[test]
-//     fn arithmetic_power() {
-//         let (fields, row) = get_data();
-//         let modification = Modification {
-//             lhs: Value::FieldName("age".to_string()),
-//             modifier: Some(Modifier::ArithmeticModifier(ArithmeticModifier::Power)),
-//             rhs: Some(Box::new(Modification {
-//                 lhs: Value::Number(2.0),
-//                 modifier: None,
-//                 rhs: None,
-//             })),
-//         };
-//         assert_eq!(
-//             modification.evaluate(&fields, &row),
-//             Some("2025".to_string())
-//         );
-//     }
+    #[test]
+    fn arithmetic_power() {
+        let (fields, row) = get_data();
+        let modification = Modification {
+            lhs: Value::FieldName("age".to_string()),
+            modifier: Some(Modifier::ArithmeticModifier(ArithmeticModifier::Power)),
+            additional_modifier: None,
+            rhs: Some(Box::new(Modification {
+                lhs: Value::Number(2.0),
+                modifier: None,
+                additional_modifier: None,
+                rhs: None,
+            })),
+        };
+        assert_eq!(
+            modification.evaluate(&fields, &row),
+            Some("2025".to_string())
+        );
+    }
 
-//     #[test]
-//     fn string_concatenate() {
-//         let (fields, row) = get_data();
-//         let modification = Modification {
-//             lhs: Value::FieldName("name".to_string()),
-//             modifier: Some(Modifier::StringModifier(StringModifier::Concatenate)),
-//             rhs: Some(Box::new(Modification {
-//                 lhs: Value::Literal(" Smith".to_string()),
-//                 modifier: None,
-//                 rhs: None,
-//             })),
-//         };
-//         assert_eq!(
-//             modification.evaluate(&fields, &row),
-//             Some("bob Smith".to_string())
-//         );
-//     }
+    #[test]
+    fn string_concatenate() {
+        let (fields, row) = get_data();
+        let modification = Modification {
+            lhs: Value::FieldName("name".to_string()),
+            modifier: Some(Modifier::StringModifier(StringModifier::Concatenate)),
+            additional_modifier: None,
+            rhs: Some(Box::new(Modification {
+                lhs: Value::Literal(" Smith".to_string()),
+                modifier: None,
+                additional_modifier: None,
+                rhs: None,
+            })),
+        };
+        assert_eq!(
+            modification.evaluate(&fields, &row),
+            Some("bob Smith".to_string())
+        );
+    }
 
-//     #[test]
-//     fn string_to_upper_case() {
-//         let (fields, row) = get_data();
-//         let modification = Modification {
-//             lhs: Value::FieldName("city".to_string()),
-//             modifier: Some(Modifier::StringModifier(StringModifier::ToUpperCase)),
-//             rhs: None,
-//         };
-//         assert_eq!(
-//             modification.evaluate(&fields, &row),
-//             Some("LONDON".to_string())
-//         );
-//     }
+    #[test]
+    fn string_to_upper_case() {
+        let (fields, row) = get_data();
+        let modification = Modification {
+            lhs: Value::FieldName("city".to_string()),
+            modifier: Some(Modifier::StringModifier(StringModifier::ToUpperCase)),
+            additional_modifier: None,
+            rhs: None,
+        };
+        assert_eq!(
+            modification.evaluate(&fields, &row),
+            Some("LONDON".to_string())
+        );
+    }
 
-//     #[test]
-//     fn string_to_lower_case() {
-//         let (fields, mut row) = get_data();
-//         row[2] = "LONDON".to_string(); // Override city to be uppercase
+    #[test]
+    fn string_to_lower_case() {
+        let (fields, mut row) = get_data();
+        row[2] = "LONDON".to_string(); // Override city to be uppercase
 
-//         let modification = Modification {
-//             lhs: Value::FieldName("city".to_string()),
-//             modifier: Some(Modifier::StringModifier(StringModifier::ToLowerCase)),
-//             rhs: None,
-//         };
-//         assert_eq!(
-//             modification.evaluate(&fields, &row),
-//             Some("london".to_string())
-//         );
-//     }
+        let modification = Modification {
+            lhs: Value::FieldName("city".to_string()),
+            modifier: Some(Modifier::StringModifier(StringModifier::ToLowerCase)),
+            additional_modifier: None,
+            rhs: None,
+        };
+        assert_eq!(
+            modification.evaluate(&fields, &row),
+            Some("london".to_string())
+        );
+    }
 
-//     #[test]
-//     fn nested_arithmetic() {
-//         let (fields, row) = get_data();
-//         let modification = Modification {
-//             lhs: Value::FieldName("age".to_string()),
-//             modifier: Some(Modifier::ArithmeticModifier(ArithmeticModifier::Plus)),
-//             rhs: Some(Box::new(Modification {
-//                 lhs: Value::Number(5.0),
-//                 modifier: Some(Modifier::ArithmeticModifier(ArithmeticModifier::Multiply)),
-//                 rhs: Some(Box::new(Modification {
-//                     lhs: Value::Number(2.0),
-//                     modifier: None,
-//                     rhs: None,
-//                 })),
-//             })),
-//         };
-//         // age + (5 * 2) = 45 + 10 = 55
-//         assert_eq!(modification.evaluate(&fields, &row), Some("55".to_string()));
-//     }
+    #[test]
+    fn nested_arithmetic() {
+        let (fields, row) = get_data();
+        let modification = Modification {
+            lhs: Value::FieldName("age".to_string()),
+            modifier: Some(Modifier::ArithmeticModifier(ArithmeticModifier::Plus)),
+            additional_modifier: None,
+            rhs: Some(Box::new(Modification {
+                lhs: Value::Number(5.0),
+                modifier: Some(Modifier::ArithmeticModifier(ArithmeticModifier::Multiply)),
+                additional_modifier: None,
+                rhs: Some(Box::new(Modification {
+                    lhs: Value::Number(2.0),
+                    modifier: None,
+                    additional_modifier: None,
+                    rhs: None,
+                })),
+            })),
+        };
+        // age + (5 * 2) = 45 + 10 = 55
+        assert_eq!(modification.evaluate(&fields, &row), Some("55".to_string()));
+    }
 
-//     #[test]
-//     fn invalid_operations() {
-//         let (fields, row) = get_data();
+    #[test]
+    fn chained_string_operations() {
+        let (fields, row) = get_data();
+        let modification = Modification {
+            lhs: Value::FieldName("name".to_string()),
+            modifier: Some(Modifier::StringModifier(StringModifier::Concatenate)),
+            additional_modifier: None,
+            rhs: Some(Box::new(Modification {
+                lhs: Value::Literal(" Smith".to_string()),
+                modifier: Some(Modifier::StringModifier(StringModifier::ToUpperCase)),
+                additional_modifier: None,
+                rhs: None,
+            })),
+        };
+        // "bob" + " Smith" -> "bob Smith" -> "BOB SMITH"
+        assert_eq!(
+            modification.evaluate(&fields, &row),
+            Some("bob SMITH".to_string())
+        );
+    }
 
-//         // Arithmetic operation on string field
-//         let modification = Modification {
-//             lhs: Value::FieldName("name".to_string()),
-//             modifier: Some(Modifier::ArithmeticModifier(ArithmeticModifier::Plus)),
-//             rhs: Some(Box::new(Modification {
-//                 lhs: Value::Number(5.0),
-//                 modifier: None,
-//                 rhs: None,
-//             })),
-//         };
-//         assert_eq!(modification.evaluate(&fields, &row), None);
+    #[test]
+    fn invalid_operations() {
+        let (fields, row) = get_data();
 
-//         // Missing rhs for concatenation
-//         let modification = Modification {
-//             lhs: Value::FieldName("name".to_string()),
-//             modifier: Some(Modifier::StringModifier(StringModifier::Concatenate)),
-//             rhs: None,
-//         };
-//         assert_eq!(modification.evaluate(&fields, &row), None);
-//     }
-// }
+        // Arithmetic operation on string field
+        let modification = Modification {
+            lhs: Value::FieldName("name".to_string()),
+            modifier: Some(Modifier::ArithmeticModifier(ArithmeticModifier::Plus)),
+            additional_modifier: None,
+            rhs: Some(Box::new(Modification {
+                lhs: Value::Number(5.0),
+                modifier: None,
+                additional_modifier: None,
+                rhs: None,
+            })),
+        };
+        assert_eq!(modification.evaluate(&fields, &row), None);
+
+        // Missing rhs for concatenation
+        let modification = Modification {
+            lhs: Value::FieldName("name".to_string()),
+            modifier: Some(Modifier::StringModifier(StringModifier::Concatenate)),
+            additional_modifier: None,
+            rhs: None,
+        };
+        assert_eq!(modification.evaluate(&fields, &row), None);
+    }
+
+    #[test]
+    fn field_not_found() {
+        let (fields, row) = get_data();
+        let modification = Modification {
+            lhs: Value::FieldName("nonexistent".to_string()),
+            modifier: Some(Modifier::ArithmeticModifier(ArithmeticModifier::Plus)),
+            additional_modifier: None,
+            rhs: Some(Box::new(Modification {
+                lhs: Value::Number(5.0),
+                modifier: None,
+                additional_modifier: None,
+                rhs: None,
+            })),
+        };
+        assert_eq!(modification.evaluate(&fields, &row), None);
+    }
+}
