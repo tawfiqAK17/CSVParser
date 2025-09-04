@@ -1,5 +1,5 @@
+// this module is needed by both the query_engine and the json_parser modules
 use std::fmt::Display;
-
 use crate::log_error;
 
 #[derive(Debug)]

@@ -1,4 +1,4 @@
-pub mod core;
+mod core;
 
 pub fn query(query: String, fields: &mut Vec<String>, rows: &mut Vec<Vec<String>>) {
 

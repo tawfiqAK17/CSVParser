@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use std::sync::OnceLock;
 use std::{env, process::exit};
 mod csv_parser;
+mod json_parser;
 mod logger;
 mod query_engine;
 

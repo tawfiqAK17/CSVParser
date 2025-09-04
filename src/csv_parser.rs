@@ -2,7 +2,6 @@ use crate::log_error;
 use crate::log_info;
 use crate::log_warning;
 use crate::{OPTIONS, Options};
-
 use super::query_engine;
 use std::{
     fs::File,
