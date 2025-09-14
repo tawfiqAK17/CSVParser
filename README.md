@@ -1,4 +1,4 @@
-# JCParser
+# CSVParser
 
 A Rust-based command-line tool for interacting with CSV files using a simple query language. Perform data retrieval and modification operations.
 
@@ -14,17 +14,17 @@ A Rust-based command-line tool for interacting with CSV files using a simple que
 ### From Source
 
 ```bash
-https://github.com/tawfiqAK17/JCParser.git
-cd JCParser
+https://github.com/tawfiqAK17/CSVParser.git
+cd CSVParser
 cargo build --release
 ```
 
-The binary will be available at `target/release/JCParser`.
+The binary will be available at `target/release/CSVParser`.
 
 ## Usage
 
 ```bash
-JCParser [FILE_TYPE] [OPTIONS] <FILE_PATH>
+CSVParser [OPTIONS] <FILE_PATH>
 ```
 
 ### Commands
@@ -218,7 +218,6 @@ counter $department
 
 ## Options
 
-- `-csv` or `-json` - the type of the file
 - `-s<CHAR>` - CSV delimiter character [default: ,]
 
 ## Error Handling
@@ -236,7 +235,6 @@ The tool provides clear error messages for:
 - [x] **DELETE operations** - Remove rows from CSV files
 - [x] **Nested modification** - Apply multiple modification on a field (ex: $email = $name || $age || "@gmail.com")
 - [x] **Aggregation functions** - SUM, COUNT, AVG, etc.
-- [ ] **JSON file support** - Extend functionality to JSON data
 
 ## Contributing
 
