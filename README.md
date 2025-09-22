@@ -192,10 +192,10 @@ get $department where $department is "Engineering"
 get * where $salary >= 70000
 
 # update salary
-set where $name is "Alice" to $salary = 80000
+set $salary = 80000 where $name is "Alice" 
 
 # update department for young employees
-set where $age < 27 to $department = "Tech"
+set $department = "Tech" where $age < 27 
 
 # add new column named 'bonus'
 insert-column $bonus = $salary * 0.1
