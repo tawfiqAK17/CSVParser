@@ -146,7 +146,7 @@ pub fn parse_file(path: &str) -> Option<(Vec<String>, Vec<Vec<String>>)> {
             continue;
         }
         let mut row: Vec<String> = Vec::new();
-        for mut i in 0..line_vals.len() {
+        for i in 0..line_vals.len() {
             let val = line_vals[i].trim().to_string();
             row.push(val);
         }

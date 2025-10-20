@@ -19,7 +19,7 @@ impl SetQuery {
             return ParseResult::None;
         }
         match lexemes.get(1) {
-            Some(lexeme) => {
+            Some(_) => {
                 let (assign_list_parse_result, last_idx) = AssignList::parse(lexemes, 1);
                 match assign_list_parse_result {
                     ParseResult::Val(assign_list) => {

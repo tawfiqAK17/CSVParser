@@ -1,0 +1,6 @@
+projectKey=CSVParser
+serverUrl=http://localhost:9000
+serverVersion=25.10.0.114319
+dashboardUrl=http://localhost:9000/dashboard?id=CSVParser
+ceTaskId=aad9bda3-bc8d-43cc-9fed-687e3fbacc16
+ceTaskUrl=http://localhost:9000/api/ce/task?id=aad9bda3-bc8d-43cc-9fed-687e3fbacc16

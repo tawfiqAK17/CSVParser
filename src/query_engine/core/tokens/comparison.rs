@@ -2,7 +2,6 @@ use super::ParseResult;
 use super::value;
 use super::value::Value;
 use crate::log_error;
-use std::io::SeekFrom;
 use std::{cmp::Ordering, fmt::Display};
 
 #[derive(Debug)]
@@ -365,7 +364,7 @@ impl Comparison {
     ) -> Option<Ordering> {
         let field_idx: usize;
         if self.is_none(fields, row) {
-          return Some(Ordering::Less);
+            return Some(Ordering::Less);
         }
         match fields.iter().position(|f| *f == self.field_name) {
             Some(idx) => field_idx = idx,
@@ -548,20 +547,6 @@ mod numbers_comparison_tests {
             rhs: Value::None,
         };
         assert!(comparison.evaluate(&fields, &row));
-    }
-
-    #[test]
-    fn test_mixed_comparisons() {
-        let (fields, row) = get_test_data();
-
-        // Test age (45) == points (60) - 15
-        let comparison = Comparison {
-            field_name: "age".to_string(),
-            comparison_op: ComparisonOps::Equal,
-            rhs: Value::Literal("($points - 15)".to_string()),
-        };
-        // This would require your evaluation to handle expressions
-        // assert!(comparison.evaluate(&fields, &row));
     }
 
     #[test]

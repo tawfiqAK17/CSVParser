@@ -8,7 +8,7 @@ pub struct WhereClause {
 }
 
 impl WhereClause {
-    pub fn parse(lexemes: &[String], mut idx: usize) -> (ParseResult<Self>, usize) {
+    pub fn parse(lexemes: &[String], idx: usize) -> (ParseResult<Self>, usize) {
         match lexemes.get(idx) {
             Some(val) => {
                 if *val == "where" {

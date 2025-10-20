@@ -15,9 +15,6 @@ pub enum AggregationFunction {
     Counter,
 }
 impl AggregationFunction {
-    pub fn get_available_functions_names<'a>() -> Vec<&'a str> {
-        return vec!["sum", "avg", "mean", "count", "counter"];
-    }
     pub fn get_function_from_name(name: &str) -> Option<AggregationFunction> {
         match name {
             "sum" => return Some(AggregationFunction::Sum),
@@ -136,21 +133,21 @@ impl AggregationFunctionCall {
             }
 
             AggregationFunction::Count => {
-              println!("{}", modification_values.len());
+                println!("{}", modification_values.len());
             }
             AggregationFunction::Counter => {
                 let mut counter: HashMap<String, usize> = HashMap::new();
                 let mut longer_val_len = 0; // to make the output clean
                 for val in modification_values {
                     if val.len() > longer_val_len {
-                      longer_val_len = val.len()
+                        longer_val_len = val.len()
                     }
                     *counter.entry(val).or_insert(0) += 1;
                 }
                 for key in counter.keys() {
                     print!("{key}");
                     for _ in key.len()..longer_val_len {
-                      print!(" ")
+                        print!(" ")
                     }
                     println!(" :{}", counter[key]);
                 }
